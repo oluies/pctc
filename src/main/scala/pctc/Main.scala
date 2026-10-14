@@ -3,30 +3,45 @@ package pctc
 import pctc.TextTable.Align.{Left, Right}
 import scala.util.Try
 
-/** Runs the three demonstrations and prints them as plain-text tables.
+/** Runs the three demonstrations, prints them as plain-text tables, and appends every row to
+  * `results.duckdb`.
   *
   * Nothing here claims that information can be sent backward in time. This is a numerical model of
   * the framework of arXiv:2509.08965, and of the post-selected closed timelike curves of
   * arXiv:1005.2219 that it builds on.
   *
-  * Options: `--steps N --rounds N --radius X --theta-steps N`.
+  * Options: `--steps N --rounds N --radius X --theta-steps N --db PATH --no-db`.
   */
 object Main:
   private val parameters: Vector[Double] = Vector.tabulate(11)(_ / 10d)
 
   def main(args: Array[String]): Unit =
     val options = Options.parse(args.toIndexedSeq)
+    val run = RunContext.create(gitCommit, options.grid)
 
     val grandfather = Demos.grandfather(options.thetaSteps)
     val teleportation = Demos.postselectedTeleportation
     val retrocausal = Demos.retrocausalSweep(parameters, options.grid)
 
-    println(header(options))
+    println(header(run, options))
     println(grandfatherTable(grandfather))
     println(teleportationTable(teleportation))
     println(retrocausalTable(retrocausal))
 
-  private final case class Options(grid: SearchGrid, thetaSteps: Int)
+    options.databasePath match
+      case None => println("\nDuckDB storage disabled with --no-db; nothing was written.")
+      case Some(path) =>
+        Results.withConnection(path): connection =>
+          Results.createSchema(connection)
+
+          val written = Results.insertGrandfather(connection, run, grandfather) +
+            Results.insertTeleportation(connection, run, teleportation) +
+            Results.insertRetrocausal(connection, run, retrocausal)
+
+          println(s"\nWrote $written rows to $path under run_id ${run.runId}.")
+          println(s"Inspect them with `duckdb $path` or `sbt \"runMain pctc.Query\"`.")
+
+  private final case class Options(grid: SearchGrid, thetaSteps: Int, databasePath: Option[String])
 
   private object Options:
     def parse(args: Seq[String]): Options =
@@ -39,7 +54,9 @@ object Main:
           rounds = value("--rounds", SearchGrid.default.rounds.toString).toInt,
           radius = value("--radius", SearchGrid.default.radius.toString).toDouble
         ),
-        thetaSteps = value("--theta-steps", "20").toInt
+        thetaSteps = value("--theta-steps", "20").toInt,
+        databasePath =
+          if args.contains("--no-db") then None else Some(value("--db", Results.DefaultPath))
       )
 
   /** `git rev-parse` on the working tree, so a stored row can be traced back to the code. */
@@ -51,11 +68,13 @@ object Main:
 
     if dirty then s"$commit-dirty" else commit
 
-  private def header(options: Options): String =
+  private def header(run: RunContext, options: Options): String =
     s"""P-CTC simulation on Scotty
        |arXiv:2509.08965 (Ji, Lloyd, Wilde) and arXiv:1005.2219 (Lloyd et al.)
        |
-       |git_commit      $gitCommit
+       |run_id          ${run.runId}
+       |created_at      ${run.createdAt}
+       |git_commit      ${run.gitCommit}
        |search grid     ${options.grid.label}
        |
        |This is a numerical model. No information travels backward in time.""".stripMargin

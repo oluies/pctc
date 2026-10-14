@@ -18,7 +18,8 @@ object pctc extends ScalaModule {
   def mainClass = Some("pctc.Main")
 
   def mvnDeps = Seq(
-    mvn"xyz.entangled::scotty:0.7.0-SNAPSHOT"
+    mvn"xyz.entangled::scotty:0.7.0-SNAPSHOT",
+    mvn"org.duckdb:duckdb_jdbc:1.5.6.0"
   )
 
   // Picks up the locally installed Scotty snapshot from ~/.m2/repository.

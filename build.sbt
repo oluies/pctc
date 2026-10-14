@@ -1,5 +1,6 @@
 val scala3Version = "3.3.8" // LTS
 val scottyVersion = "0.7.0-SNAPSHOT"
+val duckdbVersion = "1.5.6.0"
 val munitVersion = "1.3.6"
 
 ThisBuild / organization := "xyz.entangled"
@@ -15,6 +16,8 @@ lazy val root = (project in file("."))
     resolvers += Resolver.mavenLocal,
     libraryDependencies ++= Seq(
       "xyz.entangled" %% "scotty" % scottyVersion,
+      // The one permitted extra dependency, used only by the Main/Query layer.
+      "org.duckdb" % "duckdb_jdbc" % duckdbVersion,
       "org.scalameta" %% "munit" % munitVersion % Test
     ),
     scalacOptions ++= Seq(
