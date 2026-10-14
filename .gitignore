@@ -1,0 +1,13 @@
+/target
+/project/target
+/project/project
+/out
+.ipr
+
+.vscode
+.bloop
+.metals
+.bsp
+
+results.duckdb
+results.duckdb.wal
