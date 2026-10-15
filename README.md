@@ -3,7 +3,8 @@
 A numerical model of the framework in
 [arXiv:2509.08965](https://arxiv.org/abs/2509.08965), *Retrocausal capacity of a quantum channel:
 Communicating through noisy closed timelike curves* (Kaiyuan Ji, Seth Lloyd, Mark M. Wilde), built on
-the density-matrix layer of [Scotty](../scotty).
+the density-matrix layer of [Scotty](https://github.com/oluies/scotty/tree/pctc) (the `pctc`
+branch of a fork of [entangled-xyz/scotty](https://github.com/entangled-xyz/scotty)).
 
 ## What this program does, and what it does not
 
@@ -35,8 +36,8 @@ qubits, and does not use a semidefinite-programming solver (see
 Scotty's `pctc` branch, installed locally:
 
 ```bash
-cd ../scotty
-git switch pctc
+git clone -b pctc https://github.com/oluies/scotty.git
+cd scotty
 sbt publishLocal publishM2       # or: ./mill scotty.publishM2Local
 ```
 
