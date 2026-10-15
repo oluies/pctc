@@ -81,6 +81,9 @@ jobs:
   reference:
     name: reference fixtures
     runs-on: ubuntu-latest
+    # The fixtures are committed and the Scala suite compares against them with a tolerance, so a
+    # last-digit change from a new solver release is informational rather than a failure.
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10
@@ -88,6 +91,3 @@ jobs:
         run: |
           uv run reference/sdp_reference.py
           git --no-pager diff --stat -- src/test/resources
-      # The fixtures are committed and the Scala suite compares against them with a tolerance, so a
-      # last-digit change from a new solver release is informational rather than a failure.
-      continue-on-error: true
