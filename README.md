@@ -40,14 +40,17 @@ git switch pctc
 sbt publishLocal publishM2       # or: ./mill scotty.publishM2Local
 ```
 
-This project is built and tested on the latest JDK (27 at the time of writing) and emits bytecode
-for JDK 21.
+This project targets **Scala 3.9 LTS**, is built and tested on the latest JDK (27 at the time of
+writing), and emits bytecode for JDK 21.
 It depends on `xyz.entangled::scotty:0.7.0-SNAPSHOT`; the only other non-test dependency is
 `org.duckdb:duckdb_jdbc`, used only by the `Main` / `Results` / `Query` layer, with
 `org.scalameta::munit` for tests.
 
-There is no CI workflow here, because a hosted runner cannot resolve the locally published Scotty
-snapshot without also checking out and publishing that repository.
+CI builds Scotty from source before every job, since it is not on Maven Central at this version:
+`.github/workflows/ci.yml` checks out `oluies/scotty` at branch `pctc`, runs `publishLocal publishM2`
+there, and only then compiles and tests this project — under sbt on JDK 21, 25 and 27, and under
+Mill on 27. A third job regenerates the cvxpy fixture and reports any drift without failing the
+build.
 
 ## Running
 

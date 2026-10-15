@@ -1,0 +1,70 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":semanticCommitsDisabled"
+  ],
+  "schedule": ["before 6am on monday"],
+  "prConcurrentLimit": 5,
+  "labels": ["dependencies"],
+  "packageRules": [
+    {
+      "description": "This project tracks the Scala 3 LTS line, currently 3.9.x.",
+      "matchPackageNames": [
+        "org.scala-lang:scala3-library",
+        "org.scala-lang:scala3-compiler",
+        "org.scala-lang:scala3-library_3"
+      ],
+      "allowedVersions": "/^3\\.9\\./"
+    },
+    {
+      "description": "Scotty is built from source by CI, not resolved from a registry.",
+      "matchPackageNames": ["xyz.entangled:scotty"],
+      "enabled": false
+    },
+    {
+      "description": "Group the two build definitions so sbt and Mill never drift apart.",
+      "groupName": "build tooling",
+      "matchFileNames": [
+        "project/build.properties",
+        ".mill-version",
+        "mill"
+      ]
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "sbt launcher version in project/build.properties",
+      "managerFilePatterns": ["/^project/build\\.properties$/"],
+      "matchStrings": ["sbt\\.version\\s*=\\s*(?<currentValue>\\S+)"],
+      "depNameTemplate": "org.scala-sbt:sbt-launch",
+      "datasourceTemplate": "maven"
+    },
+    {
+      "customType": "regex",
+      "description": "Mill version pinned in .mill-version",
+      "managerFilePatterns": ["/^\\.mill-version$/"],
+      "matchStrings": ["(?<currentValue>[\\d.]+)"],
+      "depNameTemplate": "com-lihaoyi/mill",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "description": "Dependencies declared in the Mill build",
+      "managerFilePatterns": ["/^build\\.mill$/"],
+      "matchStrings": [
+        "mvn\"(?<depName>[^:\"]+):{1,3}(?<packageName>[^:\"]+):(?<currentValue>[^\"]+)\""
+      ],
+      "datasourceTemplate": "maven",
+      "depNameTemplate": "{{{depName}}}:{{{packageName}}}"
+    },
+    {
+      "customType": "regex",
+      "description": "Python reference tooling pinned in the uv script header",
+      "managerFilePatterns": ["/^reference/sdp_reference\\.py$/"],
+      "matchStrings": ["\"(?<depName>numpy|cvxpy)>=(?<currentValue>[\\d.]+)\""],
+      "datasourceTemplate": "pypi"
+    }
+  ]
+}

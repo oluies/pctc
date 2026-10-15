@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Scotty is not on Maven Central at this version, so every job builds it from source and installs
+  # it locally first. Keep these in step with the `scottyVersion` in build.sbt.
+  SCOTTY_REPOSITORY: oluies/scotty
+  SCOTTY_REF: pctc
+
+jobs:
+  sbt:
+    name: sbt / JDK ${{ matrix.java }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        java: ['21', '25', '27']
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check out Scotty
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ env.SCOTTY_REPOSITORY }}
+          ref: ${{ env.SCOTTY_REF }}
+          path: scotty
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+          cache: sbt
+      - uses: sbt/setup-sbt@v1
+      - name: Install Scotty locally
+        run: sbt -batch publishLocal publishM2
+        working-directory: scotty
+      - name: Compile
+        run: sbt -batch compile Test/compile
+      - name: Test
+        run: sbt -batch test
+      - name: Run the demonstrations
+        run: sbt -batch "run --steps 5 --rounds 6 --no-db"
+
+  mill:
+    name: mill / JDK 27
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check out Scotty
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ env.SCOTTY_REPOSITORY }}
+          ref: ${{ env.SCOTTY_REF }}
+          path: scotty
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '27'
+      - uses: sbt/setup-sbt@v1
+      - name: Cache Mill and Coursier
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cache/mill
+            ~/.cache/coursier
+          key: mill-${{ hashFiles('build.mill', '.mill-version') }}
+          restore-keys: mill-
+      - name: Install Scotty locally
+        run: sbt -batch publishM2
+        working-directory: scotty
+      - name: Test
+        run: ./mill pctc.test
+
+  reference:
+    name: reference fixtures
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+      - name: Regenerate the cvxpy reference and show any drift
+        run: |
+          uv run reference/sdp_reference.py
+          git --no-pager diff --stat -- src/test/resources
+      # The fixtures are committed and the Scala suite compares against them with a tolerance, so a
+      # last-digit change from a new solver release is informational rather than a failure.
+      continue-on-error: true

@@ -11,9 +11,9 @@ import mill.scalalib.*
   * Usage: `mill pctc.run`, `mill pctc.test`, `mill pctc.runMain pctc.Query`.
   */
 object pctc extends ScalaModule {
-  def scalaVersion = "3.3.8"
+  def scalaVersion = "3.9.0"
 
-  def scalacOptions = Seq("-deprecation", "-feature", "-unchecked", "-source:3.3", "-release:21")
+  def scalacOptions = Seq("-deprecation", "-feature", "-unchecked", "-release:21")
 
   def mainClass = Some("pctc.Main")
 
