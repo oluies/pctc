@@ -22,11 +22,13 @@ object Main:
     val grandfather = Demos.grandfather(options.thetaSteps)
     val teleportation = Demos.postselectedTeleportation
     val retrocausal = Demos.retrocausalSweep(parameters, options.grid)
+    val comparison = CtcComparison.all()
 
     println(header(run, options))
     println(grandfatherTable(grandfather))
     println(teleportationTable(teleportation))
     println(retrocausalTable(retrocausal))
+    println(comparisonTable(comparison))
 
     options.databasePath match
       case None => println("\nDuckDB storage disabled with --no-db; nothing was written.")
@@ -36,7 +38,8 @@ object Main:
 
           val written = Results.insertGrandfather(connection, run, grandfather) +
             Results.insertTeleportation(connection, run, teleportation) +
-            Results.insertRetrocausal(connection, run, retrocausal)
+            Results.insertRetrocausal(connection, run, retrocausal) +
+            Results.insertComparison(connection, run, comparison)
 
           println(s"\nWrote $written rows to $path under run_id ${run.runId}.")
           println(s"Inspect them with `duckdb $path` or `sbt \"runMain pctc.Query\"`.")
@@ -118,6 +121,32 @@ object Main:
        |${TextTable.render(
         Seq("stage", "P(post-select)", "renormalised", "message fidelity"),
         Seq(Left, Right, Right, Right),
+        body
+      )}""".stripMargin
+
+  private def comparisonTable(rows: Seq[ComparisonRow]): String =
+    val body = rows.map: row =>
+      Seq(
+        row.scenario,
+        if row.deutschParameters == 0 then "unique" else s"${row.deutschParameters}-param",
+        TextTable.number(row.deutschEntropy, 4),
+        TextTable.number(row.deutschOutputPurity, 4),
+        if row.pctcForbids then "forbidden" else TextTable.number(row.pctcProbability, 4),
+        if row.pctcOutputPurity.isNaN then "-" else TextTable.number(row.pctcOutputPurity, 4),
+        row.source
+      )
+
+    s"""
+       |(d) Deutsch's curve against the post-selected curve, on the same circuits
+       |    Deutsch: tau = Tr_CR[U (rho (x) tau) U*]              always satisfiable, sometimes
+       |             solved as a kernel, not by iteration           not uniquely
+       |    P-CTC:   rho -> C rho C* / Tr[C rho C*], C = Tr_CV(U)   forbids a paradox outright
+       |    The circuits come from the cited papers. Their published solutions are asserted in
+       |    DeutschCtcSuite; the columns here are what this program computes for them.
+       |
+       |${TextTable.render(
+        Seq("scenario", "Deutsch sol.", "S(tau)", "purity", "P(post-select)", "purity", "published in"),
+        Seq(Left, Left, Right, Right, Right, Right, Left),
         body
       )}""".stripMargin
 

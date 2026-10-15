@@ -45,7 +45,7 @@ jobs:
         run: sbt -batch compile Test/compile
       - name: Test
         run: sbt -batch test
-      - name: Run the demonstrations
+      - name: Run the demonstrations and the model comparison
         run: sbt -batch "run --steps 5 --rounds 6 --no-db"
 
   mill:
@@ -87,7 +87,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.3.0
-      - name: Regenerate the cvxpy reference and show any drift
+      - name: Regenerate the references and show any drift
         run: |
           uv run reference/sdp_reference.py
+          uv run reference/ctc_models_reference.py
           git --no-pager diff --stat -- src/test/resources

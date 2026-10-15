@@ -40,6 +40,26 @@ class ReferenceSuite extends munit.FunSuite:
     Solver("Convex.jl / SCS", "reference-capacities-julia.tsv")
   )
 
+  /** The numpy reference sweeps the Deutsch family on a fixed 81-point grid where the Scala side
+    * refines, so its entropies and purities carry about 1e-4 of grid error. The Scala values are the
+    * tighter ones; this bound is the reference's slack, not ours.
+    */
+  private val modelTolerance = 1e-3
+
+  private final case class Model(
+      scenario: String,
+      parameters: Int,
+      entropy: Double,
+      deutschPurity: Double,
+      pctcProbability: Double,
+      pctcPurity: Double
+  )
+
+  private lazy val models: Vector[Model] =
+    read("reference-ctc-models.tsv").map(c =>
+      Model(c(0), c(1).toInt, number(c(2)), number(c(3)), number(c(4)), if c(5) == "nan" then Double.NaN else number(c(5)))
+    )
+
   private final case class Capacity(channel: String, parameter: Double, iMax: Double, iDoe: Double, defect: Double)
 
   private final case class ChoiEntry(channel: String, parameter: Double, row: Int, col: Int, re: Double, im: Double)
@@ -173,4 +193,38 @@ class ReferenceSuite extends munit.FunSuite:
           ours <= Math.abs(row.iDoe - referenceDoe) + accuracySlack,
           s"I_doe, ${solver.name}, ${row.channel} = ${row.parameter}: ours $ours"
         )
+  }
+
+  // -- Both closed-timelike-curve models, against an independent numpy implementation -----------
+
+  test("the Deutsch and post-selected models agree with numpy on every published circuit") {
+    val computed = CtcComparison.all(SearchGrid(steps = 13, rounds = 30, radius = 1d))
+      .map(r => r.scenario -> r)
+      .toMap
+
+    assertEquals(models.length, 10)
+    assertEquals(models.map(_.scenario).toSet, computed.keySet)
+
+    for reference <- models do
+      val ours = computed(reference.scenario)
+      val label = reference.scenario
+
+      assertEquals(ours.deutschParameters, reference.parameters, s"solution dimension, $label")
+      assertEqualsDouble(ours.deutschEntropy, reference.entropy, modelTolerance, s"S(tau), $label")
+      assertEqualsDouble(ours.deutschOutputPurity, reference.deutschPurity, modelTolerance, s"Deutsch purity, $label")
+      assertEqualsDouble(ours.pctcProbability, reference.pctcProbability, 1e-9, s"P(post-select), $label")
+
+      if reference.pctcPurity.isNaN then
+        assert(ours.pctcOutputPurity.isNaN, s"$label: post-selection should forbid this branch")
+        assert(ours.pctcForbids, label)
+      else assertEqualsDouble(ours.pctcOutputPurity, reference.pctcPurity, modelTolerance, s"P-CTC purity, $label")
+  }
+
+  test("the two models genuinely disagree somewhere, so the comparison is not vacuous") {
+    val rows = CtcComparison.all(SearchGrid(steps = 9, rounds = 20, radius = 1d))
+
+    assert(rows.exists(_.pctcForbids), "post-selection forbids at least one history")
+    assert(rows.forall(_.deutschEntropy.isFinite), "Deutsch always admits one")
+    assert(rows.exists(r => Math.abs(r.deutschOutputPurity - r.pctcOutputPurity) > 0.4),
+      "and they differ sharply on at least one circuit")
   }

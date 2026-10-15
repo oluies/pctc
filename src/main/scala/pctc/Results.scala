@@ -47,6 +47,15 @@ object Results:
           |)""".stripMargin
       )
       statement.execute(
+        """CREATE TABLE IF NOT EXISTS comparison (
+          |  run_id VARCHAR, created_at TIMESTAMP, git_commit VARCHAR,
+          |  demo VARCHAR, scenario VARCHAR, source VARCHAR,
+          |  deutsch_parameters INTEGER, deutsch_entropy DOUBLE, deutsch_output_purity DOUBLE,
+          |  pctc_probability DOUBLE, pctc_output_purity DOUBLE, pctc_forbids BOOLEAN,
+          |  search_resolution VARCHAR
+          |)""".stripMargin
+      )
+      statement.execute(
         """CREATE TABLE IF NOT EXISTS retrocausal (
           |  run_id VARCHAR, created_at TIMESTAMP, git_commit VARCHAR,
           |  demo VARCHAR, channel VARCHAR, parameter_name VARCHAR, parameter DOUBLE,
@@ -58,6 +67,24 @@ object Results:
           |)""".stripMargin
       )
     finally statement.close()
+
+  def insertComparison(connection: Connection, run: RunContext, rows: Seq[ComparisonRow]): Int =
+    insert(
+      connection,
+      """INSERT INTO comparison VALUES (?, ?, ?, 'ctc model comparison', ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+      run,
+      rows,
+      (statement, row) =>
+        statement.setString(4, row.scenario)
+        statement.setString(5, row.source)
+        statement.setInt(6, row.deutschParameters)
+        statement.setDouble(7, row.deutschEntropy)
+        statement.setDouble(8, row.deutschOutputPurity)
+        statement.setDouble(9, row.pctcProbability)
+        statement.setDouble(10, row.pctcOutputPurity)
+        statement.setBoolean(11, row.pctcForbids)
+        statement.setString(12, run.grid.label)
+    )
 
   def insertGrandfather(connection: Connection, run: RunContext, rows: Seq[GrandfatherRow]): Int =
     insert(

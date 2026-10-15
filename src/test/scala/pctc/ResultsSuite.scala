@@ -28,7 +28,7 @@ class ResultsSuite extends munit.FunSuite:
       finally results.close()
     finally statement.close()
 
-  test("the schema is created idempotently and the three tables exist") {
+  test("the schema is created idempotently and all four tables exist") {
     withTemporaryDatabase: connection =>
       Results.createSchema(connection)
       Results.createSchema(connection)
@@ -39,7 +39,7 @@ class ResultsSuite extends munit.FunSuite:
         _.getString(1)
       )
 
-      assertEquals(tables, "grandfather,retrocausal,teleportation")
+      assertEquals(tables, "comparison,grandfather,retrocausal,teleportation")
   }
 
   test("rows round-trip, infinities included, and runs append rather than replace") {
@@ -83,6 +83,24 @@ class ResultsSuite extends munit.FunSuite:
         scalar(connection, "SELECT min(post_selection_probability) FROM teleportation", _.getDouble(1)),
         0.25,
         1e-12
+      )
+  }
+
+  test("the comparison table takes its own rows") {
+    withTemporaryDatabase: connection =>
+      Results.createSchema(connection)
+
+      val run = RunContext.create("commit", grid)
+      val rows = CtcComparison.all(SearchGrid(steps = 9, rounds = 15, radius = 1d))
+
+      assertEquals(Results.insertComparison(connection, run, rows), rows.length)
+      assertEquals(
+        scalar(connection, "SELECT count(*) FROM comparison WHERE pctc_forbids", _.getLong(1)),
+        rows.count(_.pctcForbids).toLong
+      )
+      assertEquals(
+        scalar(connection, "SELECT count(DISTINCT source) FROM comparison", _.getLong(1)),
+        rows.map(_.source).distinct.length.toLong
       )
   }
 

@@ -115,6 +115,50 @@ P-CTC loop of Eq. (1), entangled message    | 0.250000000000 | 1.000000000000 | 
 
 Both a product message and half of an entangled pair are carried, with fidelity 1 in each case.
 
+### (d) Deutsch's model against the post-selected model
+
+The two standard quantum treatments of a closed timelike curve, on the same circuits.
+
+Deutsch's model (D. Deutsch, Phys. Rev. D **44**, 3197 (1991)) demands that the chronology-violating
+system come back as it left:
+
+```
+tau = Tr_CR[ U (rho_i (x) tau) U* ]
+```
+
+`DeutschCtc` solves that as the kernel of `D - I`, never by iteration. Iterating does not generally
+converge: for the grandfather paradox the map is `tau -> X tau X`, whose orbit has period two, so a
+fixed-point loop oscillates forever and whatever it returns after a fixed number of steps is not a
+solution at all. The kernel is exact, and its dimension reports Deutsch's uniqueness ambiguity
+directly rather than hiding it; when the solution is not unique, Deutsch's evolutionary principle
+picks the member of greatest von Neumann entropy.
+
+The contrast is sharp. **Deutsch's condition is always satisfiable**, at the cost of mixing the
+curve, so no history is ever forbidden. **Post-selection instead gives a paradoxical history
+probability zero** — it simply never happens.
+
+```
+scenario                               | Deutsch sol. | S(tau) | purity | P(post-select) | purity
+---------------------------------------+--------------+--------+--------+----------------+-------
+grandfather CNOT, traveller |1>        | 1-param      | 1.0000 | 1.0000 |      forbidden |      -
+Ry(theta) on the curve, theta = 1.0 pi | 1-param      | 1.0000 | 1.0000 |      forbidden |      -
+unproven theorem, |0>_B|0>_M           | 1-param      | 1.0000 | 0.5000 |         0.5000 | 1.0000
+discrimination, |0>                    | unique       | 0.0000 | 1.0000 |         0.3750 | 1.0000
+discrimination, |->                    | unique       | 0.0000 | 1.0000 |         0.3750 | 1.0000
+```
+
+The circuits and their solutions are published, not invented here: the unproven-theorem and
+state-discrimination circuits and their answers under *both* models come from J.-M. A. Allen,
+*Treating time travel quantum mechanically*, Phys. Rev. A **90**, 042107 (2014),
+[arXiv:1401.4933](https://arxiv.org/abs/1401.4933). `DeutschCtcSuite` asserts those published values
+directly — the one-parameter family `alpha|0><0| + (1-alpha)|1><1|`, the maximum-entropy choice
+`alpha = 1/2`, the classically correlated Deutsch output against the pure entangled post-selected
+one, the perfect discrimination of the non-orthogonal `|0>` and `|->`, and the loop operator
+`P = |0><0| + |1><-|`.
+
+The last two rows are the uncomfortable one: a Deutsch curve tells two **non-orthogonal** states
+apart with certainty.
+
 ### (c) Retrocausal messaging through a noisy CTC
 
 For each channel and each parameter in `{0, 0.1, …, 1}`:
@@ -239,6 +283,11 @@ common with the Scala search or with each other:
 | --- | --- | --- | --- |
 | `reference/sdp_reference.py` | numpy + cvxpy | CLARABEL (interior point) | ~1e-8 |
 | `reference/sdp_reference.jl` | Convex.jl | SCS (first order, tightened) | ~1e-9 |
+| `reference/ctc_models_reference.py` | numpy | general eigensolver | ~1e-4 (grid) |
+
+The third covers both closed-timelike-curve models on the circuits of demonstration (d), so the
+published values are checked twice: once as literal assertions against the paper, and once against
+an implementation that shares no code with the Scala one.
 
 Both programs become linear once `lambda` is folded into the variable:
 
@@ -276,6 +325,10 @@ grandfather    run_id, created_at, git_commit, demo, channel, parameter_name, pa
 teleportation  run_id, created_at, git_commit, demo, channel, stage,
                post_selection_probability, renormalized_probability, message_fidelity,
                search_resolution
+
+comparison     run_id, created_at, git_commit, demo, scenario, source,
+               deutsch_parameters, deutsch_entropy, deutsch_output_purity,
+               pctc_probability, pctc_output_purity, pctc_forbids, search_resolution
 
 retrocausal    run_id, created_at, git_commit, demo, channel, parameter_name, parameter,
                i_max, i_doe, c_retro,
@@ -333,6 +386,9 @@ SELECT run_id, count(*) AS rows, max(absolute_error) AS worst FROM grandfather G
 | File | Role |
 | --- | --- |
 | `PctcLoop.scala` | Eq. (1), and `Tr_CTC(U)` for the unitary special case |
+| `DeutschCtc.scala` | Deutsch's self-consistency condition, solved as a kernel |
+| `CtcComparison.scala` | the two models side by side on published circuits |
+| `Circuits.scala` | full matrices for multi-qubit gates |
 | `Capacities.scala` | `I_max` and `I_doe` by search; the Choi state |
 | `OperatorOrder.scala` | `X <= lambda Y` and the bisection for the smallest `lambda` |
 | `Bloch.scala` | the swept operator families |
