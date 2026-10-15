@@ -223,6 +223,41 @@ things keep it there, none of which change a single digit of the output:
 For reference, the same sweep took 86 s before these three changes, and the worst deviation from
 the closed forms is unchanged at `9.7e-10`.
 
+## Cross-validation against independent implementations
+
+Most of the suite checks the numerics against closed forms transcribed from the same paper this
+program implements, which would not catch a transcription slip. Two independent implementations in
+`reference/` close that gap by building the three channels from their Kraus definitions and solving
+Eqs. (9) and (10) as semidefinite programs, with no code, language, modelling layer or solver in
+common with the Scala search or with each other:
+
+| | stack | solver | accuracy on these programs |
+| --- | --- | --- | --- |
+| `reference/sdp_reference.py` | numpy + cvxpy | CLARABEL (interior point) | ~1e-8 |
+| `reference/sdp_reference.jl` | Convex.jl | SCS (first order, tightened) | ~1e-9 |
+
+Both programs become linear once `lambda` is folded into the variable:
+
+```
+I_max(N) = log2  min { tr Y : Y >= 0,     pi (x) Y >= N(Phi) }    with Y = lambda sigma
+I_doe(N) = -log2 max { tr W : W = W',     pi (x) W <= N(Phi) }    with W = tau / lambda
+```
+
+This matters for more than arithmetic. The solvers optimise over the **whole Hermitian cone**, where
+the Scala search sweeps a Bloch parametrisation and, for the erasure channel, only block-diagonal
+operators. Agreement is evidence that neither restriction loses anything — the symmetry argument in
+[The approximation](#the-approximation) is checked, not just asserted. The Python fixture also pins
+every Choi operator entry by entry, which tests the Kraus operators and the density-matrix layer
+directly rather than through the capacities.
+
+`ReferenceSuite` reads the committed fixtures from `src/test/resources`, so the suite needs neither
+Python nor Julia. Regenerate them with:
+
+```bash
+uv run reference/sdp_reference.py
+julia --project=reference reference/sdp_reference.jl
+```
+
 ## Results storage
 
 Every computed row is appended to `results.duckdb`, one table per demonstration, stamped with a

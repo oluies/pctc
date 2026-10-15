@@ -33,5 +33,7 @@ object pctc extends ScalaModule {
     def mvnDeps = Seq(mvn"org.scalameta::munit:1.3.6")
 
     def sources = Task.Sources(moduleDir / os.up / os.up / "src" / "test" / "scala")
+
+    def resources = Task.Sources(moduleDir / os.up / os.up / "src" / "test" / "resources")
   }
 }
