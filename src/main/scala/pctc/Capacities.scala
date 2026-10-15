@@ -39,9 +39,13 @@ object Capacities:
   def maxInformation(channel: Channel, grid: SearchGrid): InformationEstimate =
     val choi = choiState(channel).matrix
     val reference = channel.inputDim
-    val family = Bloch.stateFamily(channel.outputDim)
 
-    search(family, grid, (operator, ceiling) => OperatorOrder.minLogLambda(choi, padded(reference, operator), ceiling))
+    search(
+      Bloch.stateFamily(channel.outputDim),
+      grid,
+      (operator, ceiling, tolerance) =>
+        OperatorOrder.minLogLambda(choi, padded(reference, operator), ceiling, tolerance)
+    )
 
   /** `I_doe(N) = inf { log2 lambda : pi_{A'} (x) tau_B <= lambda N(Phi_{A'A}) }`, Eq. (10).
     *
@@ -51,25 +55,37 @@ object Capacities:
   def doeblinInformation(channel: Channel, grid: SearchGrid): InformationEstimate =
     val choi = choiState(channel).matrix
     val reference = channel.inputDim
-    val family = Bloch.hermitianFamily(channel.outputDim, grid.radius)
 
-    search(family, grid, (operator, ceiling) => OperatorOrder.minLogLambda(padded(reference, operator), choi, ceiling))
+    search(
+      Bloch.hermitianFamily(channel.outputDim, grid.radius),
+      grid,
+      (operator, ceiling, tolerance) =>
+        OperatorOrder.minLogLambda(padded(reference, operator), choi, ceiling, tolerance)
+    )
 
   /** `C_retro = I_max + I_doe`, infinite as soon as either part is. */
   def retrocausalCapacity(maxInformation: Double, doeblinInformation: Double): Double =
     maxInformation + doeblinInformation
 
+  /** Locates the optimum with a tolerance that tightens as the search closes in, then evaluates the
+    * winning point once at full precision. Scanning at full precision throughout would spend about
+    * forty semidefinite tests on every grid point, almost all of them on points that lose.
+    */
   private def search(
       family: OperatorFamily,
       grid: SearchGrid,
-      objective: (ComplexMatrix, Double) => Option[Double]
+      objective: (ComplexMatrix, Double, Double) => Option[Double]
   ): InformationEstimate =
     val result = CoordinateSearch.minimize(
       family.box,
       grid,
-      (point, ceiling) => objective(family.build(point), ceiling)
+      (point, ceiling, tolerance) => objective(family.build(point), ceiling, tolerance)
     )
 
-    val bits = if result.value >= OperatorOrder.Ceiling then Double.PositiveInfinity else result.value
+    val refined = result.point.flatMap { point =>
+      objective(family.build(point), OperatorOrder.Ceiling, OperatorOrder.LogTolerance)
+    }
 
-    InformationEstimate(bits, result.point, result.evaluations)
+    val bits = refined.filter(_ < OperatorOrder.Ceiling).getOrElse(Double.PositiveInfinity)
+
+    InformationEstimate(bits, result.point, result.evaluations + 1)

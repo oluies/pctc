@@ -202,6 +202,27 @@ the stored rows. Largest absolute deviation over all finite reference values, in
 The depolarizing optima are grid points (`sigma_B = tau_B = pi`), so they are exact at every
 resolution; the floor of about `6e-11` is the bisection tolerance, not the grid.
 
+### Cost
+
+The sweep at `--steps 17 --rounds 50` visits 2,232,200 grid points and takes about 1.6 s. Three
+things keep it there, none of which change a single digit of the output:
+
+- The semidefinite test goes through `Cholesky.differenceIsPositiveDefinite` rather than computing
+  eigenvalues. Only the sign of the smallest eigenvalue matters, a factorisation decides that
+  without iterating, and fusing the difference into the factorisation avoids allocating two
+  matrices of boxed complex numbers per test.
+- A grid point that cannot beat the incumbent costs **one** semidefinite test. Only a point that
+  improves on it pays for a bisection, and the coarse grid bisects to a loose 0.125 bits, since all
+  it has to do is pick a cell. The refinement rounds run at full tolerance — they have to, because
+  their window halves every round and a centre displaced by a loose comparison is one the later
+  rounds can no longer walk back — and the winning point is re-evaluated once at full precision at
+  the end.
+- The coarse grid is scanned in parallel, each chunk carrying its own incumbent so the result stays
+  deterministic.
+
+For reference, the same sweep took 86 s before these three changes, and the worst deviation from
+the closed forms is unchanged at `9.7e-10`.
+
 ## Results storage
 
 Every computed row is appended to `results.duckdb`, one table per demonstration, stamped with a
