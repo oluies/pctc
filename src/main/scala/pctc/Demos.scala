@@ -125,8 +125,9 @@ object Demos:
     */
   def retrocausal(spec: ChannelSpec, parameter: Double, grid: SearchGrid): RetrocausalRow =
     val channel = spec.build(parameter)
-    val maxInformation = Capacities.maxInformation(channel, grid)
-    val doeblin = Capacities.doeblinInformation(channel, grid)
+    val informations = Capacities.informations(channel, grid)
+    val maxInformation = informations.maxInformation
+    val doeblin = informations.doeblinInformation
     val dimension = channel.inputDim
 
     RetrocausalRow(

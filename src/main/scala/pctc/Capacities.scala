@@ -2,6 +2,9 @@ package pctc
 
 import scotty.quantum.density.{Channel, ComplexMatrix, DensityMatrix}
 
+/** The two information measures of one channel, computed together. */
+final case class ChannelInformations(maxInformation: InformationEstimate, doeblinInformation: InformationEstimate)
+
 /** One numerically estimated information measure. */
 final case class InformationEstimate(bits: Double, point: Option[Vector[Double]], evaluations: Int):
   def isFinite: Boolean = bits.isFinite
@@ -28,24 +31,21 @@ object Capacities:
 
     channel.applyTo(DensityMatrix.maximallyEntangled(channel.inputDim), Seq(1))
 
-  /** `pi_{A'} (x) operator`, with `pi` maximally mixed on a system of dimension `referenceDim`. */
-  private def padded(referenceDim: Int, operator: ComplexMatrix): ComplexMatrix =
-    ComplexMatrix.identity(referenceDim).scale(1d / referenceDim).tensor(operator)
+  /** `pi_{A'}`, maximally mixed on a system of the given dimension.
+    *
+    * Built once per search and closed over, not per swept operator: the searches evaluate their
+    * objective a few million times, and rebuilding a constant there is a few million allocations
+    * thrown away.
+    */
+  private def maximallyMixed(dimension: Int): ComplexMatrix =
+    ComplexMatrix.identity(dimension).scale(1d / dimension)
 
   /** `I_max(N) = inf { log2 lambda : N(Phi_{A'A}) <= lambda pi_{A'} (x) sigma_B }`, Eq. (9).
     *
     * The infimum runs over real numbers and states of `B`.
     */
   def maxInformation(channel: Channel, grid: SearchGrid): InformationEstimate =
-    val choi = choiState(channel).matrix
-    val reference = channel.inputDim
-
-    search(
-      Bloch.stateFamily(channel.outputDim),
-      grid,
-      (operator, ceiling, tolerance) =>
-        OperatorOrder.minLogLambda(choi, padded(reference, operator), ceiling, tolerance)
-    )
+    maxInformationOf(choiState(channel).matrix, maximallyMixed(channel.inputDim), channel, grid)
 
   /** `I_doe(N) = inf { log2 lambda : pi_{A'} (x) tau_B <= lambda N(Phi_{A'A}) }`, Eq. (10).
     *
@@ -53,14 +53,44 @@ object Capacities:
     * positive.
     */
   def doeblinInformation(channel: Channel, grid: SearchGrid): InformationEstimate =
-    val choi = choiState(channel).matrix
-    val reference = channel.inputDim
+    doeblinInformationOf(choiState(channel).matrix, maximallyMixed(channel.inputDim), channel, grid)
 
+  /** Both informations, sharing one Choi operator and one `pi` between the two searches.
+    *
+    * Each search is still run exactly once. Asking for the two measures separately is also fine; it
+    * only recomputes the Choi operator, which is cheap next to either search.
+    */
+  def informations(channel: Channel, grid: SearchGrid): ChannelInformations =
+    val choi = choiState(channel).matrix
+    val pi = maximallyMixed(channel.inputDim)
+
+    ChannelInformations(
+      maxInformation = maxInformationOf(choi, pi, channel, grid),
+      doeblinInformation = doeblinInformationOf(choi, pi, channel, grid)
+    )
+
+  private def maxInformationOf(
+      choi: ComplexMatrix,
+      pi: ComplexMatrix,
+      channel: Channel,
+      grid: SearchGrid
+  ): InformationEstimate =
+    search(
+      Bloch.stateFamily(channel.outputDim),
+      grid,
+      (operator, ceiling, tolerance) => OperatorOrder.minLogLambda(choi, pi.tensor(operator), ceiling, tolerance)
+    )
+
+  private def doeblinInformationOf(
+      choi: ComplexMatrix,
+      pi: ComplexMatrix,
+      channel: Channel,
+      grid: SearchGrid
+  ): InformationEstimate =
     search(
       Bloch.hermitianFamily(channel.outputDim, grid.radius),
       grid,
-      (operator, ceiling, tolerance) =>
-        OperatorOrder.minLogLambda(padded(reference, operator), choi, ceiling, tolerance)
+      (operator, ceiling, tolerance) => OperatorOrder.minLogLambda(pi.tensor(operator), choi, ceiling, tolerance)
     )
 
   /** `C_retro = I_max + I_doe`, infinite as soon as either part is. */
