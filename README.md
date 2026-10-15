@@ -40,8 +40,11 @@ git switch pctc
 sbt publishLocal publishM2       # or: ./mill scotty.publishM2Local
 ```
 
-This project needs JDK 17 or newer and depends on `xyz.entangled::scotty:0.7.0-SNAPSHOT`. The only
-other dependency is `org.duckdb:duckdb_jdbc`, used by `Main` and `Query` and nowhere else.
+This project is built and tested on the latest JDK (27 at the time of writing) and emits bytecode
+for JDK 21.
+It depends on `xyz.entangled::scotty:0.7.0-SNAPSHOT`; the only other non-test dependency is
+`org.duckdb:duckdb_jdbc`, used only by the `Main` / `Results` / `Query` layer, with
+`org.scalameta::munit` for tests.
 
 There is no CI workflow here, because a hosted runner cannot resolve the locally published Scotty
 snapshot without also checking out and publishing that repository.
@@ -65,7 +68,7 @@ Options:
 | `--steps N` | 9 | points per axis, in the coarse grid and in each refinement scan |
 | `--rounds N` | 30 | coordinate-refinement rounds; the search window halves each round |
 | `--radius X` | 1000 | largest Bloch radius swept for unit-trace Hermitian operators |
-| `--theta-steps N` | 20 | points in the grandfather sweep from 0 to pi |
+| `--theta-steps N` | 20 | intervals in the grandfather sweep from 0 to pi, so `N+1` points |
 | `--db PATH` | `results.duckdb` | database file to append to |
 | `--no-db` | — | skip storage entirely |
 
@@ -176,8 +179,9 @@ Three things are worth knowing about this:
    block diagonal. The channel's Choi operator commutes with `I ⊗ (I₂ + e^{i phi}|e><e|)` for every
    phase, both operator inequalities are linear in the swept operator, and averaging over that phase
    group preserves the trace as well as the inequality — so the optimum can be taken block diagonal.
-3. **Infinity is detected structurally, within a stated range.** `log2 lambda` is bisected over
-   `[-32, 32]`; a pair that is infeasible at the ceiling is reported as infinite. The semidefinite
+3. **Infinity is detected structurally, within a stated range.** `log2 lambda` is bisected up to a
+   ceiling of 32, with a floor of -40 below which the two operators are treated as equal; a pair
+   that is infeasible at the ceiling is reported as infinite. The semidefinite
    test normalises by `lambda` rather than multiplying by it, so one relative tolerance
    (`1e-12`, against a Jacobi accuracy of about `1e-15`) stays meaningful across the whole range.
    Without that normalisation a genuinely infeasible inequality passes at a large `lambda` and
