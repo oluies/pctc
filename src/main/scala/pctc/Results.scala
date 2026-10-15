@@ -52,6 +52,7 @@ object Results:
           |  demo VARCHAR, scenario VARCHAR, source VARCHAR,
           |  deutsch_parameters INTEGER, deutsch_entropy DOUBLE, deutsch_output_purity DOUBLE,
           |  pctc_probability DOUBLE, pctc_output_purity DOUBLE, pctc_forbids BOOLEAN,
+          |  tctc_output_purity DOUBLE, tctc_coherent_fraction DOUBLE,
           |  search_resolution VARCHAR
           |)""".stripMargin
       )
@@ -71,7 +72,7 @@ object Results:
   def insertComparison(connection: Connection, run: RunContext, rows: Seq[ComparisonRow]): Int =
     insert(
       connection,
-      """INSERT INTO comparison VALUES (?, ?, ?, 'ctc model comparison', ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+      """INSERT INTO comparison VALUES (?, ?, ?, 'ctc model comparison', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
       run,
       rows,
       (statement, row) =>
@@ -83,7 +84,9 @@ object Results:
         statement.setDouble(9, row.pctcProbability)
         statement.setDouble(10, row.pctcOutputPurity)
         statement.setBoolean(11, row.pctcForbids)
-        statement.setString(12, run.grid.label)
+        statement.setDouble(12, row.tctcOutputPurity)
+        statement.setDouble(13, row.tctcCoherentFraction)
+        statement.setString(14, run.grid.label)
     )
 
   def insertGrandfather(connection: Connection, run: RunContext, rows: Seq[GrandfatherRow]): Int =

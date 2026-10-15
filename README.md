@@ -115,9 +115,9 @@ P-CTC loop of Eq. (1), entangled message    | 0.250000000000 | 1.000000000000 | 
 
 Both a product message and half of an entangled pair are carried, with fidelity 1 in each case.
 
-### (d) Deutsch's model against the post-selected model
+### (d) Three models of a closed timelike curve
 
-The two standard quantum treatments of a closed timelike curve, on the same circuits.
+The two standard quantum treatments plus Allen's, on the same circuits.
 
 Deutsch's model (D. Deutsch, Phys. Rev. D **44**, 3197 (1991)) demands that the chronology-violating
 system come back as it left:
@@ -133,31 +133,56 @@ solution at all. The kernel is exact, and its dimension reports Deutsch's unique
 directly rather than hiding it; when the solution is not unique, Deutsch's evolutionary principle
 picks the member of greatest von Neumann entropy.
 
-The contrast is sharp. **Deutsch's condition is always satisfiable**, at the cost of mixing the
-curve, so no history is ever forbidden. **Post-selection instead gives a paradoxical history
-probability zero** — it simply never happens.
+Allen's own proposal, the transition-probability curve (T-CTC), averages over chronology-violating
+pure states weighted by their transition probability — his Eq. (24). Carrying that integral out over
+the Fubini-Study measure collapses it to Eq. (33), which is what `TctcLoop` implements:
 
 ```
-scenario                               | Deutsch sol. | S(tau) | purity | P(post-select) | purity
----------------------------------------+--------------+--------+--------+----------------+-------
-grandfather CNOT, traveller |1>        | 1-param      | 1.0000 | 1.0000 |      forbidden |      -
-Ry(theta) on the curve, theta = 1.0 pi | 1-param      | 1.0000 | 1.0000 |      forbidden |      -
-unproven theorem, |0>_B|0>_M           | 1-param      | 1.0000 | 0.5000 |         0.5000 | 1.0000
-discrimination, |0>                    | unique       | 0.0000 | 1.0000 |         0.3750 | 1.0000
-discrimination, |->                    | unique       | 0.0000 | 1.0000 |         0.3750 | 1.0000
+rho_f = z [ C rho C* + Tr_CV( U (rho (x) 1) U* ) ],    C = Tr_CV(U)
 ```
+
+The first term is exactly the post-selected numerator; the second is an ordinary quantum channel.
+Allen reads it as "a weighted mixture of the corresponding P-CTC equation of motion with an ordinary
+quantum channel".
+
+The three diverge sharply. **Deutsch's condition is always satisfiable**, at the cost of mixing the
+curve. **Post-selection gives a paradoxical history probability zero** — it simply never happens.
+**Allen's never forbids anything either**, because the channel term cannot vanish, and it pays for
+that in mixedness.
+
+```
+scenario                               | D sol.  | D purity | P(post-select) | P purity | T purity | T coh.
+---------------------------------------+---------+----------+----------------+----------+----------+-------
+grandfather CNOT, traveller |1>        | 1-param |   1.0000 |      forbidden |        - |   1.0000 | 0.0000
+Ry(theta) on the curve, theta = 1.0 pi | 1-param |   1.0000 |      forbidden |        - |   1.0000 | 0.0000
+unproven theorem, |0>_B|0>_M           | 1-param |   0.5000 |         0.5000 |   1.0000 |   0.6250 | 0.5000
+discrimination, |0>                    | unique  |   1.0000 |         0.3750 |   1.0000 |   0.5918 | 0.4286
+discrimination, |->                    | unique  |   1.0000 |         0.3750 |   1.0000 |   0.5918 | 0.4286
+discrimination, |+>                    | unique  |   0.6667 |         0.1250 |   1.0000 |   0.5200 | 0.2000
+```
+
+`T coh.` is the share of the T-CTC output carried by its post-selected term. Two rows are worth
+dwelling on. On the **grandfather** circuits `C|psi> = 0`, so that share is zero and the whole output
+comes from the channel — which is exactly why post-selection forbids those histories and Allen's
+model does not. On **discrimination**, `|0>` and `|->` give T-CTC *identical* outputs, so it cannot
+tell them apart; Deutsch and post-selection both can, with certainty.
+
+T-CTC purity is **not** bracketed by the other two. On the unproven theorem it sits between them
+(0.625 against 0.5 and 1.0, which is Allen's Eq. (35)), but on discrimination it is more mixed than
+either. An earlier version of this README claimed otherwise and a test caught it.
 
 The circuits and their solutions are published, not invented here: the unproven-theorem and
-state-discrimination circuits and their answers under *both* models come from J.-M. A. Allen,
+state-discrimination circuits and their answers under *all three* models come from J.-M. A. Allen,
 *Treating time travel quantum mechanically*, Phys. Rev. A **90**, 042107 (2014),
 [arXiv:1401.4933](https://arxiv.org/abs/1401.4933). `DeutschCtcSuite` asserts those published values
 directly — the one-parameter family `alpha|0><0| + (1-alpha)|1><1|`, the maximum-entropy choice
 `alpha = 1/2`, the classically correlated Deutsch output against the pure entangled post-selected
 one, the perfect discrimination of the non-orthogonal `|0>` and `|->`, and the loop operator
-`P = |0><0| + |1><-|`.
+`P = |0><0| + |1><-|`, and Eq. (35)'s transition-probability output
+`1/2|00><00| + 1/4|00><11| + 1/4|11><00| + 1/2|11><11|`, which `TctcLoopSuite` asserts to 1e-12.
 
-The last two rows are the uncomfortable one: a Deutsch curve tells two **non-orthogonal** states
-apart with certainty.
+The uncomfortable row is discrimination: a Deutsch curve tells two **non-orthogonal** states apart
+with certainty. Allen built T-CTCs partly to avoid that, and the table shows it working.
 
 ### (c) Retrocausal messaging through a noisy CTC
 
@@ -285,7 +310,7 @@ common with the Scala search or with each other:
 | `reference/sdp_reference.jl` | Convex.jl | SCS (first order, tightened) | ~1e-9 |
 | `reference/ctc_models_reference.py` | numpy | general eigensolver | ~1e-4 (grid) |
 
-The third covers both closed-timelike-curve models on the circuits of demonstration (d), so the
+The third covers all three closed-timelike-curve models on the circuits of demonstration (d), so the
 published values are checked twice: once as literal assertions against the paper, and once against
 an implementation that shares no code with the Scala one.
 
@@ -328,7 +353,8 @@ teleportation  run_id, created_at, git_commit, demo, channel, stage,
 
 comparison     run_id, created_at, git_commit, demo, scenario, source,
                deutsch_parameters, deutsch_entropy, deutsch_output_purity,
-               pctc_probability, pctc_output_purity, pctc_forbids, search_resolution
+               pctc_probability, pctc_output_purity, pctc_forbids,
+               tctc_output_purity, tctc_coherent_fraction, search_resolution
 
 retrocausal    run_id, created_at, git_commit, demo, channel, parameter_name, parameter,
                i_max, i_doe, c_retro,
@@ -387,6 +413,7 @@ SELECT run_id, count(*) AS rows, max(absolute_error) AS worst FROM grandfather G
 | --- | --- |
 | `PctcLoop.scala` | Eq. (1), and `Tr_CTC(U)` for the unitary special case |
 | `DeutschCtc.scala` | Deutsch's self-consistency condition, solved as a kernel |
+| `TctcLoop.scala` | Allen's transition-probability curve, Eq. (33) |
 | `CtcComparison.scala` | the two models side by side on published circuits |
 | `Circuits.scala` | full matrices for multi-qubit gates |
 | `Capacities.scala` | `I_max` and `I_doe` by search; the Choi state |
@@ -409,6 +436,10 @@ Everything above `Main`, `Results` and `Query` is free of any database dependenc
 - Kaiyuan Ji, Seth Lloyd, Mark M. Wilde, *Retrocausal capacity of a quantum channel: Communicating
   through noisy closed timelike curves*, [arXiv:2509.08965](https://arxiv.org/abs/2509.08965).
   Equation numbers in the source refer to v3; `Sxxx` numbers are from its Supplemental Material.
+- John-Mark A. Allen, *Treating time travel quantum mechanically*, Phys. Rev. A **90**, 042107
+  (2014), [arXiv:1401.4933](https://arxiv.org/abs/1401.4933). Source of the D-CTC, P-CTC and T-CTC
+  comparison circuits and their published solutions.
+- David Deutsch, *Quantum mechanics near closed timelike lines*, Phys. Rev. D **44**, 3197 (1991).
 - Seth Lloyd, Lorenzo Maccone, Raul Garcia-Patron, Vittorio Giovannetti, Yutaka Shikano,
   *The quantum mechanics of time travel through post-selected teleportation*,
   [arXiv:1005.2219](https://arxiv.org/abs/1005.2219).

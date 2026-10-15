@@ -18,14 +18,25 @@ final case class ComparisonRow(
     deutschEntropy: Double,
     deutschOutputPurity: Double,
     pctcProbability: Double,
-    pctcOutputPurity: Double
+    pctcOutputPurity: Double,
+    tctcOutputPurity: Double,
+    tctcCoherentFraction: Double
 ):
   def pctcForbids: Boolean = pctcProbability <= 1e-12
 
-  /** Deutsch always admits a consistent history; post-selection sometimes admits none. */
+  /** Deutsch and Allen's model always admit a consistent history; post-selection sometimes does not. */
   def modelsDisagree: Boolean = pctcForbids || Math.abs(deutschOutputPurity - pctcOutputPurity) > 1e-6
 
-/** Deutsch's model and the post-selected model, on the same circuits.
+  /** Allen's model adds an ordinary channel to the post-selected term, so its output is generally
+    * mixed. It is not bracketed by the other two: on the state-discrimination circuit it comes out
+    * more mixed than either of them.
+    *
+    * Allen notes the exact condition for purity below Eq. (33): the output is pure only when
+    * `P|psi> = 0` or when the two terms of Eq. (33) coincide.
+    */
+  def tctcMixes: Boolean = tctcOutputPurity < 1d - 1e-9
+
+/** All three models of a closed timelike curve, on the same circuits.
   *
   * The scenarios are the ones with published solutions, so the numbers in the table can be checked
   * against a paper rather than against this program's own arithmetic:
@@ -33,7 +44,8 @@ final case class ComparisonRow(
   *   - the grandfather paradox, D. Deutsch, Phys. Rev. D 44, 3197 (1991), and for the post-selected
   *     side S. Lloyd et al., arXiv:1005.2219;
   *   - the unproven-theorem and state-discrimination circuits of J.-M. A. Allen, Phys. Rev. A 90,
-  *     042107 (2014), arXiv:1401.4933, which works both models on each.
+  *     042107 (2014), arXiv:1401.4933, which works every model on each, and whose Eq. (35) gives the
+  *     transition-probability output explicitly.
   */
 object CtcComparison:
   private val qubit = Vector(2)
@@ -73,6 +85,8 @@ object CtcComparison:
       if weight <= 1e-12 then Double.NaN
       else purity(DensityMatrix(crState.dims, transformed.scale(1 / weight)))
 
+    val tctc = TctcLoop.evaluate(unitary, crState, ctcDims)
+
     ComparisonRow(
       scenario = scenario,
       source = source,
@@ -80,7 +94,9 @@ object CtcComparison:
       deutschEntropy = deutsch.entropy,
       deutschOutputPurity = purity(deutsch.output),
       pctcProbability = weight / (ctcDimension.toDouble * ctcDimension),
-      pctcOutputPurity = pctcPurity
+      pctcOutputPurity = pctcPurity,
+      tctcOutputPurity = purity(tctc.normalized),
+      tctcCoherentFraction = tctc.coherentFraction
     )
 
   /** `U = SWAP_MT CNOT_BM CNOT_TB` on `(B, M, T)`, Allen's unproven-theorem circuit. */

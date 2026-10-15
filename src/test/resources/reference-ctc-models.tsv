@@ -1,11 +1,11 @@
-scenario	deutsch_parameters	deutsch_entropy	deutsch_output_purity	pctc_probability	pctc_output_purity
-grandfather CNOT, traveller |1>	1	1	1	0	nan
-grandfather CNOT, traveller |0>	3	0.999927133529	1	1	1
-Ry(theta) on the curve, theta = 0.0 pi	3	0.999927133529	1	1	1
-Ry(theta) on the curve, theta = 0.5 pi	1	1	1	0.5	1
-Ry(theta) on the curve, theta = 1.0 pi	1	1	1	0	nan
-unproven theorem, |0>_B|0>_M	1	0.999927133529	0.500050506339	0.5	1
-discrimination, |0>	0	-0	1	0.375	1
-discrimination, |->	0	-0	1	0.375	1
-discrimination, |+>	0	0.550047759583	0.666666666667	0.125	1
-discrimination, |1>	0	0.550047759583	0.666666666667	0.125	1
+scenario	deutsch_parameters	deutsch_entropy	deutsch_output_purity	pctc_probability	pctc_output_purity	tctc_output_purity	tctc_coherent_fraction
+grandfather CNOT, traveller |1>	1	1	1	0	nan	1	0
+grandfather CNOT, traveller |0>	3	0.999927133529	1	1	1	1	0.666666666667
+Ry(theta) on the curve, theta = 0.0 pi	3	0.999927133529	1	1	1	1	0.666666666667
+Ry(theta) on the curve, theta = 0.5 pi	1	1	1	0.5	1	1	0.5
+Ry(theta) on the curve, theta = 1.0 pi	1	1	1	0	nan	1	0
+unproven theorem, |0>_B|0>_M	1	0.999927133529	0.500050506339	0.5	1	0.625	0.5
+discrimination, |0>	0	-0	1	0.375	1	0.591836734694	0.428571428571
+discrimination, |->	0	-0	1	0.375	1	0.591836734694	0.428571428571
+discrimination, |+>	0	0.550047759583	0.666666666667	0.125	1	0.52	0.2
+discrimination, |1>	0	0.550047759583	0.666666666667	0.125	1	0.52	0.2

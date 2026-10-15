@@ -52,12 +52,23 @@ class ReferenceSuite extends munit.FunSuite:
       entropy: Double,
       deutschPurity: Double,
       pctcProbability: Double,
-      pctcPurity: Double
+      pctcPurity: Double,
+      tctcPurity: Double,
+      tctcCoherentFraction: Double
   )
 
   private lazy val models: Vector[Model] =
     read("reference-ctc-models.tsv").map(c =>
-      Model(c(0), c(1).toInt, number(c(2)), number(c(3)), number(c(4)), if c(5) == "nan" then Double.NaN else number(c(5)))
+      Model(
+        c(0),
+        c(1).toInt,
+        number(c(2)),
+        number(c(3)),
+        number(c(4)),
+        if c(5) == "nan" then Double.NaN else number(c(5)),
+        number(c(6)),
+        number(c(7))
+      )
     )
 
   private final case class Capacity(channel: String, parameter: Double, iMax: Double, iDoe: Double, defect: Double)
@@ -214,13 +225,58 @@ class ReferenceSuite extends munit.FunSuite:
       assertEqualsDouble(ours.deutschOutputPurity, reference.deutschPurity, modelTolerance, s"Deutsch purity, $label")
       assertEqualsDouble(ours.pctcProbability, reference.pctcProbability, 1e-9, s"P(post-select), $label")
 
+      assertEqualsDouble(ours.tctcOutputPurity, reference.tctcPurity, modelTolerance, s"T-CTC purity, $label")
+      assertEqualsDouble(
+        ours.tctcCoherentFraction,
+        reference.tctcCoherentFraction,
+        modelTolerance,
+        s"T-CTC coherent fraction, $label"
+      )
+
       if reference.pctcPurity.isNaN then
         assert(ours.pctcOutputPurity.isNaN, s"$label: post-selection should forbid this branch")
         assert(ours.pctcForbids, label)
       else assertEqualsDouble(ours.pctcOutputPurity, reference.pctcPurity, modelTolerance, s"P-CTC purity, $label")
   }
 
-  test("the two models genuinely disagree somewhere, so the comparison is not vacuous") {
+  test("Allen's model never forbids a history, and mixes rather than bracketing the other two") {
+    val rows = CtcComparison.all(SearchGrid(steps = 9, rounds = 20, radius = 1d))
+
+    assert(rows.forall(_.tctcOutputPurity > 0d), "a T-CTC always has an output")
+    assert(rows.exists(r => r.pctcForbids && r.tctcOutputPurity > 0d), "even where post-selection forbids one")
+
+    // Allen Eq. (35): on the unproven-theorem circuit it does sit strictly between.
+    val unproven = rows.find(_.scenario.startsWith("unproven theorem")).get
+
+    assertEqualsDouble(unproven.tctcOutputPurity, 0.625, 1e-9)
+    assert(unproven.tctcOutputPurity > unproven.deutschOutputPurity)
+    assert(unproven.tctcOutputPurity < unproven.pctcOutputPurity)
+
+    // But it is not bracketed in general: on the discrimination circuit it is more mixed than both,
+    // because the second term of Eq. (33) is an ordinary channel and can decohere further.
+    val discrimination = rows.filter(_.scenario.startsWith("discrimination, |+"))
+
+    assert(discrimination.nonEmpty)
+    assert(
+      discrimination.forall(r => r.tctcOutputPurity < r.deutschOutputPurity && r.tctcOutputPurity < r.pctcOutputPurity),
+      "T-CTC is the most mixed of the three here"
+    )
+
+    // Allen's purity criterion below Eq. (33): the output is pure only when P|psi> = 0 or the two
+    // terms coincide. So a row with a non-vanishing but non-dominant coherent term must be mixed --
+    // and the grandfather rows, where P|psi> = 0 exactly, are the stated exception and stay pure.
+    val partiallyCoherent = rows.filter(r => r.tctcCoherentFraction > 1e-9 && r.tctcCoherentFraction < 0.45)
+
+    assert(partiallyCoherent.nonEmpty)
+    assert(partiallyCoherent.forall(_.tctcMixes), partiallyCoherent.map(_.scenario).mkString(", "))
+
+    val annihilated = rows.filter(_.tctcCoherentFraction <= 1e-9)
+
+    assert(annihilated.nonEmpty, "the grandfather circuits have P|psi> = 0")
+    assert(annihilated.forall(_.pctcForbids), "which is exactly why post-selection forbids them")
+  }
+
+  test("the models genuinely disagree somewhere, so the comparison is not vacuous") {
     val rows = CtcComparison.all(SearchGrid(steps = 9, rounds = 20, radius = 1d))
 
     assert(rows.exists(_.pctcForbids), "post-selection forbids at least one history")

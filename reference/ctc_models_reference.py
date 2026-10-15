@@ -11,6 +11,7 @@ the paper would still show up as a mismatch.
 
 Deutsch (arXiv:1401.4933 Eq. 1):  tau = Tr_CR[ U (rho_i (x) tau) U* ]
 Post-selected (Eq. 9):            rho -> P rho P* / Tr[P rho P*],  P = Tr_CV(U)
+Transition probability (Eq. 33):  rho -> z[ P rho P* + Tr_CV(U (rho (x) 1) U*) ]
 
 Deutsch's condition is solved as an eigenproblem of the superoperator, never by iteration: for the
 grandfather paradox the iteration has period two and never converges.
@@ -150,6 +151,19 @@ def postselected(u: np.ndarray, rho_i: np.ndarray, cr: int, ctc_dim: int):
     return weight / ctc_dim**2, transformed / weight
 
 
+def transition_probability(u: np.ndarray, rho_i: np.ndarray, cr: int, ctc_dim: int):
+    """Allen Eq. (33): the post-selected term plus an ordinary channel, then normalised."""
+    blocks = [[u[np.ix_([a * ctc_dim + al for a in range(cr)], [b * ctc_dim + be for b in range(cr)])]
+               for be in range(ctc_dim)] for al in range(ctc_dim)]
+    p = sum(blocks[a][a] for a in range(ctc_dim))
+    coherent = p @ rho_i @ p.conj().T
+    incoherent = sum(blocks[al][be] @ rho_i @ blocks[al][be].conj().T
+                     for al in range(ctc_dim) for be in range(ctc_dim))
+    total = coherent + incoherent
+    weight = float(np.real(np.trace(total)))
+    return total / weight, float(np.real(np.trace(coherent)) / weight)
+
+
 def purity(rho) -> float:
     return float(np.real(np.trace(rho @ rho)))
 
@@ -184,13 +198,18 @@ def main() -> None:
         ("discrimination, |1>", discriminator, dm(ket(0, 1)), [2], 2),
     ]
 
-    rows = ["scenario\tdeutsch_parameters\tdeutsch_entropy\tdeutsch_output_purity\tpctc_probability\tpctc_output_purity"]
+    rows = [
+        "scenario\tdeutsch_parameters\tdeutsch_entropy\tdeutsch_output_purity"
+        "\tpctc_probability\tpctc_output_purity\ttctc_output_purity\ttctc_coherent_fraction"
+    ]
     for name, u, rho_i, cr_dims, ctc_dim in scenarios:
         params, tau, out = deutsch(u, rho_i, cr_dims, ctc_dim)
         prob, ps_out = postselected(u, rho_i, math.prod(cr_dims), ctc_dim)
         ps_purity = "nan" if ps_out is None else f"{purity(ps_out):.12g}"
+        t_out, t_coherent = transition_probability(u, rho_i, math.prod(cr_dims), ctc_dim)
         rows.append(
             f"{name}\t{params}\t{entropy(tau):.12g}\t{purity(out):.12g}\t{prob:.12g}\t{ps_purity}"
+            f"\t{purity(t_out):.12g}\t{t_coherent:.12g}"
         )
 
     out_path = Path(__file__).parent.parent / "src/test/resources/reference-ctc-models.tsv"

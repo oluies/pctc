@@ -129,24 +129,28 @@ object Main:
       Seq(
         row.scenario,
         if row.deutschParameters == 0 then "unique" else s"${row.deutschParameters}-param",
-        TextTable.number(row.deutschEntropy, 4),
         TextTable.number(row.deutschOutputPurity, 4),
         if row.pctcForbids then "forbidden" else TextTable.number(row.pctcProbability, 4),
         if row.pctcOutputPurity.isNaN then "-" else TextTable.number(row.pctcOutputPurity, 4),
+        TextTable.number(row.tctcOutputPurity, 4),
+        TextTable.number(row.tctcCoherentFraction, 4),
         row.source
       )
 
     s"""
-       |(d) Deutsch's curve against the post-selected curve, on the same circuits
+       |(d) Three models of a closed timelike curve, on the same circuits
        |    Deutsch: tau = Tr_CR[U (rho (x) tau) U*]              always satisfiable, sometimes
        |             solved as a kernel, not by iteration           not uniquely
        |    P-CTC:   rho -> C rho C* / Tr[C rho C*], C = Tr_CV(U)   forbids a paradox outright
+       |    T-CTC:   rho -> z[ C rho C* + Tr_CV(U (rho (x) 1) U*) ] never forbids anything, and
+       |             Allen Eq. (33): the P-CTC term plus a channel   pays for it in mixedness
+       |    "T coh." is the share of the T-CTC output carried by its post-selected term.
        |    The circuits come from the cited papers. Their published solutions are asserted in
-       |    DeutschCtcSuite; the columns here are what this program computes for them.
+       |    DeutschCtcSuite and TctcLoopSuite; the columns are what this program computes.
        |
        |${TextTable.render(
-        Seq("scenario", "Deutsch sol.", "S(tau)", "purity", "P(post-select)", "purity", "published in"),
-        Seq(Left, Left, Right, Right, Right, Right, Left),
+        Seq("scenario", "D sol.", "D purity", "P(post-select)", "P purity", "T purity", "T coh.", "published in"),
+        Seq(Left, Left, Right, Right, Right, Right, Right, Left),
         body
       )}""".stripMargin
 
