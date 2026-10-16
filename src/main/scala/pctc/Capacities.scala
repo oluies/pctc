@@ -78,7 +78,7 @@ object Capacities:
     search(
       Bloch.stateFamily(channel.outputDim),
       grid,
-      (operator, ceiling, tolerance) => OperatorOrder.minLogLambda(choi, pi.tensor(operator), ceiling, tolerance)
+      (operator, bound) => OperatorOrder.bracket(choi, pi.tensor(operator), bound)
     )
 
   private def doeblinInformationOf(
@@ -90,32 +90,29 @@ object Capacities:
     search(
       Bloch.hermitianFamily(channel.outputDim, grid.radius),
       grid,
-      (operator, ceiling, tolerance) => OperatorOrder.minLogLambda(pi.tensor(operator), choi, ceiling, tolerance)
+      (operator, bound) => OperatorOrder.bracket(pi.tensor(operator), choi, bound)
     )
 
   /** `C_retro = I_max + I_doe`, infinite as soon as either part is. */
   def retrocausalCapacity(maxInformation: Double, doeblinInformation: Double): Double =
     maxInformation + doeblinInformation
 
-  /** Locates the optimum with a tolerance that tightens as the search closes in, then evaluates the
-    * winning point once at full precision. Scanning at full precision throughout would spend about
-    * forty semidefinite tests on every grid point, almost all of them on points that lose.
+  /** Locates the optimum, then settles the winning bracket to full precision.
+    *
+    * The search itself refines only as far as its comparisons demand, so a point that loses costs a
+    * single semidefinite test rather than a full bisection, and the winner arrives already partly
+    * refined.
     */
   private def search(
       family: OperatorFamily,
       grid: SearchGrid,
-      objective: (ComplexMatrix, Double, Double) => Option[Double]
+      objective: (ComplexMatrix, Double) => Option[Bracket]
   ): InformationEstimate =
-    val result = CoordinateSearch.minimize(
-      family.box,
-      grid,
-      (point, ceiling, tolerance) => objective(family.build(point), ceiling, tolerance)
-    )
+    val result = CoordinateSearch
+      .minimize(family.box, grid, (point, bound) => objective(family.build(point), bound))
+      .narrowed(OperatorOrder.LogTolerance)
 
-    val refined = result.point.flatMap { point =>
-      objective(family.build(point), OperatorOrder.Ceiling, OperatorOrder.LogTolerance)
-    }
+    val bits =
+      if result.value >= OperatorOrder.Ceiling then Double.PositiveInfinity else result.value
 
-    val bits = refined.filter(_ < OperatorOrder.Ceiling).getOrElse(Double.PositiveInfinity)
-
-    InformationEstimate(bits, result.point, result.evaluations + 1)
+    InformationEstimate(bits, result.point, result.evaluations)

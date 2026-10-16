@@ -134,12 +134,14 @@ object DeutschCtc:
         val result = CoordinateSearch.minimize(
           box,
           grid,
-          (point, ceiling, _) =>
+          (point, bound) =>
             val candidate = family.at(point)
 
-            Option.when(candidate.isPositiveSemidefinite(1e-9)) {
-              -entropy(candidate)
-            }.filter(_ < ceiling)
+            // Entropy is exact, so there is nothing to bisect; the bracket is a point.
+            Option
+              .when(candidate.isPositiveSemidefinite(1e-9))(-entropy(candidate))
+              .filter(_ < bound)
+              .map(Bracket.exact)
         )
 
         result.point.map(family.at).getOrElse(family.particular)

@@ -69,19 +69,18 @@ object OperatorOrder:
       ceiling: Double = Ceiling,
       tolerance: Double = LogTolerance
   ): Option[Double] =
-    if !dominates(candidate, reference, ceiling) then None
-    else Some(bisect(candidate, reference, Floor, ceiling, tolerance))
+    bracket(candidate, reference, ceiling).map(_.narrowed(tolerance).bound)
 
-  private def bisect(
+  /** The same infimum, left unevaluated as a [[Bracket]].
+    *
+    * One semidefinite test decides whether `ceiling` can be beaten at all; nothing further is spent
+    * until the caller refines or compares the result. That is what lets a search spend a single test
+    * on a point that loses.
+    */
+  def bracket(
       candidate: ComplexMatrix,
       reference: ComplexMatrix,
-      low: Double,
-      high: Double,
-      tolerance: Double
-  ): Double =
-    if high - low <= tolerance then high
-    else
-      val middle = low + (high - low) / 2
-
-      if dominates(candidate, reference, middle) then bisect(candidate, reference, low, middle, tolerance)
-      else bisect(candidate, reference, middle, high, tolerance)
+      ceiling: Double = Ceiling
+  ): Option[Bracket] =
+    if !dominates(candidate, reference, ceiling) then None
+    else Some(Bracket(Floor, ceiling, logLambda => dominates(candidate, reference, logLambda), tests = 1))

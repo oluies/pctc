@@ -13,10 +13,10 @@ class SearchSuite extends munit.FunSuite:
 
   test("the coordinate search finds the minimum of a smooth two-dimensional objective") {
     val box = Vector((-1d, 1d), (-1d, 1d))
-    val objective: CoordinateSearch.Objective = (point, ceiling, _) =>
+    val objective: CoordinateSearch.Objective = (point, bound) =>
       val value = Math.pow(point(0) - 0.3137, 2) + Math.pow(point(1) + 0.7129, 2)
 
-      Option.when(value < ceiling)(value)
+      Option.when(value < bound)(Bracket.exact(value))
 
     val result = CoordinateSearch.minimize(box, grid, objective)
 
@@ -26,9 +26,10 @@ class SearchSuite extends munit.FunSuite:
   }
 
   test("the coordinate search reports no point when nothing is feasible") {
-    val result = CoordinateSearch.minimize(Vector((0d, 1d)), grid, (_, _, _) => None)
+    val result = CoordinateSearch.minimize(Vector((0d, 1d)), grid, (_, _) => None)
 
     assertEquals(result.point, None)
+    assertEquals(result.bracket, None)
     assertEqualsDouble(result.value, OperatorOrder.Ceiling, 0d)
     assert(result.evaluations > 0)
   }
