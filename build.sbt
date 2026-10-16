@@ -18,16 +18,30 @@ lazy val jvmOnlySources = Set("Platform.scala", "Main.scala", "Results.scala", "
 // density-matrix layer the browser needs does not depend on it.
 lazy val jvmOnlyScottySources = Set("QuantumSimulator.scala", "VectorWrapper.scala")
 
+// Scotty lives beside this repository for a local checkout and inside it in continuous
+// integration, where it is checked out to ./scotty. Look in both rather than assuming one.
+lazy val scottySources = Def.setting {
+  val base = (ThisBuild / baseDirectory).value
+  val candidates = Seq(base / "scotty", base / ".." / "scotty").map(_ / "src" / "main" / "scala")
+
+  candidates.find(_.isDirectory).getOrElse {
+    sys.error(
+      "Scotty's sources were not found. The browser build compiles them directly; expected one of: " +
+        candidates.map(_.getAbsolutePath).mkString(", ")
+    )
+  }
+}
+
 lazy val web = (project in file("web"))
   .enablePlugins(ScalaJSPlugin)
   .settings(
     name := "pctc-web",
     scalaVersion := scala3Version,
-    scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked"),
+    scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked", "-release:21"),
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.8.1",
     Compile / unmanagedSourceDirectories ++= Seq(
       (ThisBuild / baseDirectory).value / "src" / "main" / "scala",
-      (ThisBuild / baseDirectory).value / ".." / "scotty" / "src" / "main" / "scala"
+      scottySources.value
     ),
     Compile / unmanagedSources / excludeFilter := {
       val jvmOnly = jvmOnlySources ++ jvmOnlyScottySources
