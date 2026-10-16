@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.12"
-# dependencies = ["numpy>=2", "cvxpy>=1.7"]
+# dependencies = ["numpy>=2", "cvxpy>=1.9.3"]
 # ///
 """Independent reference values for the max- and Doeblin informations.
 
