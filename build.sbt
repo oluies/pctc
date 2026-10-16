@@ -7,6 +7,42 @@ ThisBuild / organization := "xyz.entangled"
 ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / scalaVersion := scala3Version
 
+// The browser build compiles the same computation sources to JavaScript. It deliberately does not
+// restructure this project into a cross-build: the only platform-specific code is `Platform`, and
+// everything that cannot run in a browser -- the DuckDB layer and the command-line entry point -- is
+// excluded by filename below. Scotty's sources are read from a sibling checkout, which is already a
+// prerequisite for the JVM build.
+lazy val jvmOnlySources = Set("Platform.scala", "Main.scala", "Results.scala", "Query.scala")
+
+// Scotty's state-vector simulator uses parallel collections, which have no Scala.js artifact. The
+// density-matrix layer the browser needs does not depend on it.
+lazy val jvmOnlyScottySources = Set("QuantumSimulator.scala", "VectorWrapper.scala")
+
+lazy val web = (project in file("web"))
+  .enablePlugins(ScalaJSPlugin)
+  .settings(
+    name := "pctc-web",
+    scalaVersion := scala3Version,
+    scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked"),
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.8.1",
+    Compile / unmanagedSourceDirectories ++= Seq(
+      (ThisBuild / baseDirectory).value / "src" / "main" / "scala",
+      (ThisBuild / baseDirectory).value / ".." / "scotty" / "src" / "main" / "scala"
+    ),
+    Compile / unmanagedSources / excludeFilter := {
+      val jvmOnly = jvmOnlySources ++ jvmOnlyScottySources
+      new sbt.io.SimpleFileFilter(file =>
+        jvmOnly.contains(file.getName) && !file.getPath.contains("/web/")
+      )
+    },
+    scalaJSUseMainModuleInitializer := true,
+    Compile / mainClass := Some("pctc.WebMain"),
+    publish / skip := true
+  )
+
+/** Assembles the static site: the page from web/site plus the linked, optimised JavaScript. */
+lazy val site = taskKey[File]("Assembles the browser demonstration into web/target/site")
+
 lazy val root = (project in file("."))
   .settings(
     name := "pctc",
@@ -35,3 +71,17 @@ lazy val root = (project in file("."))
     Compile / run / javaOptions += "-Xss8m",
     publish / skip := true
   )
+
+site := {
+  val out = (ThisBuild / baseDirectory).value / "web" / "target" / "site"
+  val linked = (web / Compile / fullLinkJSOutput).value
+  val page = (ThisBuild / baseDirectory).value / "web" / "site"
+
+  IO.delete(out)
+  IO.createDirectory(out)
+  IO.copyDirectory(page, out)
+  IO.copyDirectory(linked, out)
+
+  streams.value.log.info(s"site assembled at $out")
+  out
+}

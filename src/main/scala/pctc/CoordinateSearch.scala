@@ -1,8 +1,5 @@
 package pctc
 
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext, Future}
-
 /** How finely the operator families of [[Bloch]] are swept.
   *
   * @param steps  points per axis, both in the coarse product grid and in each refinement scan
@@ -36,8 +33,9 @@ final case class SearchResult(point: Option[Vector[Double]], value: Double, eval
   * longer walk back. Refinement points are cheap anyway, because all but a handful of them are
   * rejected by the incumbent after a single test.
   *
-  * The coarse grid is scanned in parallel. Each chunk carries its own incumbent rather than sharing
-  * one, which costs a little pruning and buys a deterministic result.
+  * The coarse grid is scanned in parallel through [[Platform]], which is the one piece of this
+  * program that differs between the JVM and the browser. Each chunk carries its own incumbent rather
+  * than sharing one, which costs a little pruning and buys a deterministic result.
   */
 object CoordinateSearch:
   /** `(point, incumbent, tolerance) => Some(value)` when the point beats the incumbent. */
@@ -48,8 +46,6 @@ object CoordinateSearch:
 
   /** Smallest number of grid points worth handing to a thread of its own. */
   val MinimumChunk: Int = 512
-
-  private given ExecutionContext = ExecutionContext.global
 
   def minimize(box: Vector[(Double, Double)], grid: SearchGrid, objective: Objective): SearchResult =
     val coarse = scanCoarseGrid(box, grid, objective)
@@ -77,15 +73,13 @@ object CoordinateSearch:
       (from until until).foldLeft(empty): (best, index) =>
         consider(best, pointAt(index), CoarseTolerance, objective)
 
-    val threads = Runtime.getRuntime.availableProcessors
-    val chunks = Math.max(1, Math.min(threads, total / MinimumChunk))
+    val chunks = Math.max(1, Math.min(Platform.threads, total / MinimumChunk))
 
     if chunks <= 1 then scan(0, total)
     else
       val bounds = Vector.tabulate(chunks)(c => (total * c / chunks, total * (c + 1) / chunks))
-      val parts = Await.result(Future.traverse(bounds)((f, u) => Future(scan(f, u))), Duration.Inf)
 
-      parts.reduceLeft(combine)
+      Platform.mapRanges(bounds)(scan).reduceLeft(combine)
 
   private def refineAxis(
       best: SearchResult,

@@ -1,0 +1,67 @@
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+env:
+  SCOTTY_REPOSITORY: oluies/scotty
+  SCOTTY_REF: pctc
+
+jobs:
+  build:
+    name: build the browser demonstration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check out Scotty
+        # The Scala.js build compiles Scotty's density-matrix sources directly rather than resolving
+        # a published artifact, so the sibling checkout is a build input here, not just a dependency.
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ env.SCOTTY_REPOSITORY }}
+          ref: ${{ env.SCOTTY_REF }}
+          path: scotty
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '27'
+          cache: sbt
+      - uses: sbt/setup-sbt@v1
+
+      - name: Verify the numerics in a JavaScript runtime
+        # Scala.js cannot read classpath resources or reach DuckDB, so the fixture-based suites
+        # cannot run there. This checks the published closed forms against the linked JavaScript
+        # instead, and fails the build on any mismatch.
+        run: |
+          sbt -batch 'set web/Compile/mainClass := Some("pctc.SmokeMain")' web/fastLinkJS
+          node web/target/scala-3.9.0/pctc-web-fastopt/main.js
+
+      - name: Assemble the site
+        run: sbt -batch site
+
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: web/target/site
+
+  deploy:
+    name: deploy
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

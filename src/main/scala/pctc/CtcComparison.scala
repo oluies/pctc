@@ -1,7 +1,6 @@
 package pctc
 
 import scotty.quantum.density.{ComplexMatrix, DensityMatrix}
-import java.util.Locale
 import scotty.quantum.math.Complex
 
 /** One scenario evaluated under both models of a closed timelike curve.
@@ -124,7 +123,7 @@ object CtcComparison:
       val theta = Math.PI * fraction
 
       compare(
-        String.format(Locale.ROOT, "Ry(theta) on the curve, theta = %.1f pi", fraction),
+        s"Ry(theta) on the curve, theta = ${TextTable.number(fraction, 1)} pi",
         deutsch1991,
         Circuits.onQubit(qubits = 2, target = 1, Circuits.rotationY(theta)),
         DensityMatrix.basis(qubit, 0),

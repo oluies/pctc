@@ -11,3 +11,5 @@
 
 results.duckdb
 results.duckdb.wal
+
+web/target

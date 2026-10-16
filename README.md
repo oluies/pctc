@@ -1,5 +1,8 @@
 # pctc — a post-selected closed timelike curve, simulated
 
+**[Run it in your browser →](https://oluies.github.io/pctc/)** — the same computation, compiled to
+JavaScript with Scala.js. No server does any of the arithmetic.
+
 A numerical model of the framework in
 [arXiv:2509.08965](https://arxiv.org/abs/2509.08965), *Retrocausal capacity of a quantum channel:
 Communicating through noisy closed timelike curves* (Kaiyuan Ji, Seth Lloyd, Mark M. Wilde), built on
@@ -52,6 +55,37 @@ CI builds Scotty from source before every job, since it is not on Maven Central 
 there, and only then compiles and tests this project — under sbt on JDK 21, 25 and 27, and under
 Mill on 27. A third job regenerates the cvxpy fixture and reports any drift without failing the
 build.
+
+## In the browser
+
+`web/` compiles the computation to JavaScript and publishes it to GitHub Pages. It deliberately does
+**not** restructure this project into a cross-build: the only platform-specific code is `Platform`,
+which hands the coarse grid to a thread pool on the JVM and scans it in order in a browser, and
+everything that cannot run in a browser — the DuckDB layer and the command-line entry point — is
+excluded by filename in `build.sbt`. Scotty's sources are compiled from the sibling checkout, which
+the JVM build already requires.
+
+```bash
+sbt site                       # assembles web/target/site (index.html + linked JavaScript)
+sbt web/fastLinkJS             # quick link while iterating
+```
+
+Two things had to change to link for JavaScript, both improvements in their own right:
+
+- `java.util.Locale` is not implemented in Scala.js at all, so `String.format(Locale.ROOT, ...)`
+  could not link. `TextTable.number` now goes through `java.math.BigDecimal`, which is locale-free
+  by construction and implemented on both platforms. It parses `value.toString` rather than the
+  double, because `java.util.Formatter` rounds the *shortest decimal representation* and not the
+  exact binary expansion — building `BigDecimal` from the double directly disagreed with the
+  formatter on 21 of 5369 cases, and parsing `toString` agrees on all of them.
+- `String.format`'s `%,d` grouping flag reaches `java.text.DecimalFormat`, also unimplemented;
+  `TextTable.grouped` replaces it.
+
+Scala.js cannot read classpath resources and has no DuckDB, so `ReferenceSuite` and `ResultsSuite`
+cannot run there. `web/src/main/scala/pctc/SmokeMain.scala` checks the published closed forms of
+arXiv:2509.08965 and the worked outputs of arXiv:1401.4933 against the linked JavaScript instead,
+under `node`, and the Pages workflow fails the build on any mismatch. All 22 checks pass; the sweep
+runs about 97,000 grid points in roughly 200 ms in a browser.
 
 ## Running
 
