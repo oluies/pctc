@@ -329,13 +329,29 @@ sequential across axes, so Amdahl caps the whole thing near 1.3x. And handing th
 *slower*: the product is built once per grid point, whereas the block indexing it replaces is paid
 on every bisection step, several per point, and again for every entry of the magnitude scan.
 
-The one lever left is the representation. `ComplexMatrix` stores `Vector[Complex]`, so the inner
-loop reads boxed objects. The identical factorisation over two interleaved `Array[Double]` measures
-**3.96x faster** (0.181 against 0.046 microseconds per 6x6 test); `ReprBench` shows the comparison.
-Since the semidefinite test is roughly 70% of a grid point's cost, that is worth perhaps 2x on the
-sweep, and it is the only change measured so far that would move it. It needs `ComplexMatrix` to
-keep its `Complex`-valued API while storing primitives underneath, which is a real refactor of
-Scotty's central type rather than a local tweak.
+The lever that did work was the representation. `ComplexMatrix` now stores interleaved primitives
+rather than `Vector[Complex]`, and the kernels read them through `realAt`/`imagAt` instead of
+allocating a `Complex` per entry. Measured back to back, with a hand-written primitive routine as an
+unchanged control and discounting the 9% the control itself drifted:
+
+| | boxed | primitive | control-adjusted |
+| --- | --- | --- | --- |
+| 6x6 positive-definiteness test | 0.185 us | 0.108 us | 1.57x |
+| Kronecker product | 0.153 us | 0.056 us | 2.50x |
+| `OperatorOrder.dominates` | 0.244 us | 0.138 us | 1.62x |
+| sweep, steps=9 rounds=30 | 0.389 s | 0.307 s | **1.16x** |
+| sweep, steps=17 rounds=50 | 1.207 s | 0.856 s | **1.29x** |
+
+Accuracy and evaluation counts are identical either way. Note that the microbenchmark promised more
+than it delivered: comparing the boxed path against hand-written primitive code suggested about 4x,
+but `ComplexMatrix` cannot fully close that gap (bounds checks, call boundaries), and the
+semidefinite test is not the whole of a grid point, so the sweep gained 1.2-1.3x rather than the 2x
+extrapolated from the microbenchmark.
+
+A note on method, since this cost real time. Timings taken minutes apart on this machine drift by up
+to 1.9x, enough to invent or erase any of the effects above. Every figure here comes from an A/B run
+back to back in one sitting with an unchanged control measured alongside; two earlier "improvements"
+in this file's history were machine drift and had to be retracted.
 
 ## Cross-validation against independent implementations
 
