@@ -348,6 +348,31 @@ but `ComplexMatrix` cannot fully close that gap (bounds checks, call boundaries)
 semidefinite test is not the whole of a grid point, so the sweep gained 1.2-1.3x rather than the 2x
 extrapolated from the microbenchmark.
 
+Three further directions were measured and rejected.
+
+**Lazy precision.** The search's tolerances can be replaced by a bracket that refines only when a
+comparison demands it, so precision is never configured per phase -- which is where this search once
+had an accuracy bug. It works, and is a hair more accurate (9.722e-10 against 9.745e-10), but costs
+about 1.5x: proving an ordering between two *equal* values forces refinement to the floor, and the
+spherical Bloch parametrisation is degenerate at zero radius, so exact ties are common. Kept on the
+`lazy-precision-search` branch rather than merged. It did expose something worth knowing: tie
+breaking at that degenerate point is load bearing, and preferring the later of two tied points moves
+the centre the refinement rounds start from, costing four orders of magnitude of accuracy.
+
+**Cats Effect, or any other concurrency runtime.** There is nothing here for one to win. The
+parallel coarse grid already scales 3.6x on its own, and refinement -- about 77% of a search -- is
+coordinate descent, sequential across axes by construction. Finer-grained work distribution, the one
+thing a work-stealing runtime would offer, was tested directly by lowering the chunk threshold from
+512 points to 32: the sweep went from 0.185 s to 0.195 s, slightly worse. A fibre runtime would add
+a dependency the project does not otherwise need, for a part of the work that is not the constraint.
+
+**Scala Native.** The one real argument for it is warm-up: a single sweep is **47% JIT warm-up**
+(0.349 s cold against 0.185 s steady state, measured by `WarmupBench`), and the command-line program
+runs once and exits, so it pays that every time. Ahead-of-time compilation would recover most of it.
+Against that, DuckDB's JDBC driver is a JVM library, so the entire `Results`/`Query` layer would have
+to be replaced, and steady-state numeric throughput on tight double loops is where HotSpot is already
+competitive with LLVM. Recovering 0.16 s per invocation does not pay for losing the storage layer.
+
 A note on method, since this cost real time. Timings taken minutes apart on this machine drift by up
 to 1.9x, enough to invent or erase any of the effects above. Every figure here comes from an A/B run
 back to back in one sitting with an unchanged control measured alongside; two earlier "improvements"
