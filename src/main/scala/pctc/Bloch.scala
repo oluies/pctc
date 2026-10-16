@@ -21,10 +21,16 @@ final case class OperatorFamily(name: String, box: Vector[(Double, Double)], bui
 object Bloch:
   /** `(t I + x X + y Y + z Z) / 2`, a Hermitian qubit operator of trace `t`. */
   def qubitOperator(t: Double, x: Double, y: Double, z: Double): ComplexMatrix =
-    ComplexMatrix.fromRows(
-      Seq(
-        Seq(Complex((t + z) / 2), Complex(x / 2, -y / 2)),
-        Seq(Complex(x / 2, y / 2), Complex((t - z) / 2))
+    // Built row-major directly. `fromRows` would allocate a Seq per row and flatten them, which the
+    // capacity searches would pay for a few million times over.
+    ComplexMatrix(
+      2,
+      2,
+      Vector(
+        Complex((t + z) / 2),
+        Complex(x / 2, -y / 2),
+        Complex(x / 2, y / 2),
+        Complex((t - z) / 2)
       )
     )
 
@@ -48,11 +54,13 @@ object Bloch:
   def blockQutrit(block: ComplexMatrix, blockTrace: Double): ComplexMatrix =
     val zero = Complex(0)
 
-    ComplexMatrix.fromRows(
-      Seq(
-        Seq(block(0, 0), block(0, 1), zero),
-        Seq(block(1, 0), block(1, 1), zero),
-        Seq(zero, zero, Complex(1 - blockTrace))
+    ComplexMatrix(
+      3,
+      3,
+      Vector(
+        block(0, 0), block(0, 1), zero,
+        block(1, 0), block(1, 1), zero,
+        zero, zero, Complex(1 - blockTrace)
       )
     )
 

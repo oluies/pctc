@@ -260,6 +260,31 @@ Three things are worth knowing about this:
    Without that normalisation a genuinely infeasible inequality passes at a large `lambda` and
    infinity is silently reported as a finite 30-odd bits.
 
+### Choosing the grid
+
+Measured, not guessed. Worst deviation from the closed forms over the whole sweep, against wall time
+on an M5 Pro:
+
+| steps | rounds | time | worst error |
+| --- | --- | --- | --- |
+| 9 | 20 | 0.22 s | 2.4e-07 |
+| **9** | **30** | **0.30 s** | **9.7e-10** |
+| 9 | 40 | 0.39 s | 9.7e-10 |
+| 11 | 30 | 0.38 s | 9.7e-10 |
+| 13 | 30 | 0.46 s | 9.7e-10 |
+| 17 | 30 | 0.71 s | 9.7e-10 |
+| 17 | 50 | 1.15 s | 9.7e-10 |
+
+`9.7e-10` is the floor, set by the bisection tolerance rather than the grid. Three things follow.
+The default of `steps=9, rounds=30` is the cheapest way to reach that floor, so raising either knob
+buys nothing. Rounds past 30 are pure waste. And **rounds matter more than coarse resolution**:
+`steps=25, rounds=15` is both slower *and* less accurate (2.9e-06) than `steps=17, rounds=30`.
+
+Refinement rounds are not uniformly productive, which is why a "stop when a round stops improving"
+rule is unsafe here: for the erasure channel the search improves at rounds 0 and 1, then nothing
+until round 36. For the depolarizing channel the optimum is a coarse grid point and *every*
+refinement round after the first is idle. `RoundsVsAccuracy` regenerates the table above.
+
 ### Resolution actually achieved
 
 `CapacitiesSuite` asserts agreement with the closed forms, and `Query` reports the convergence from
@@ -295,6 +320,22 @@ things keep it there, none of which change a single digit of the output:
 
 For reference, the same sweep took 86 s before these three changes, and the worst deviation from
 the closed forms is unchanged at `9.7e-10`.
+
+Two things that were measured and found *not* to help, recorded so they are not retried blindly.
+Thread count barely moves the sweep: the parallel coarse grid does scale (3.6x from one thread to
+eighteen on its own), but refinement is about 77% of a search and coordinate descent is inherently
+sequential across axes, so Amdahl caps the whole thing near 1.3x. And handing the semidefinite test
+`pi (x) sigma` in block form, so the Kronecker product is never materialised, came out about 25%
+*slower*: the product is built once per grid point, whereas the block indexing it replaces is paid
+on every bisection step, several per point, and again for every entry of the magnitude scan.
+
+The one lever left is the representation. `ComplexMatrix` stores `Vector[Complex]`, so the inner
+loop reads boxed objects. The identical factorisation over two interleaved `Array[Double]` measures
+**3.96x faster** (0.181 against 0.046 microseconds per 6x6 test); `ReprBench` shows the comparison.
+Since the semidefinite test is roughly 70% of a grid point's cost, that is worth perhaps 2x on the
+sweep, and it is the only change measured so far that would move it. It needs `ComplexMatrix` to
+keep its `Complex`-valued API while storing primitives underneath, which is a real refactor of
+Scotty's central type rather than a local tweak.
 
 ## Cross-validation against independent implementations
 
