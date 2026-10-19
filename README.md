@@ -9,6 +9,10 @@ Communicating through noisy closed timelike curves* (Kaiyuan Ji, Seth Lloyd, Mar
 the density-matrix layer of [Scotty](https://github.com/oluies/scotty/tree/pctc) (the `pctc`
 branch of a fork of [entangled-xyz/scotty](https://github.com/entangled-xyz/scotty)).
 
+The channel layer this depends on also has a hardware implementation in Chisel, verified against the
+same Scotty code: [**brokkr**](https://oluies.github.io/brokkr/) — see
+[below](#the-channel-layer-in-hardware).
+
 ## What this program does, and what it does not
 
 It **does** evaluate, with ordinary linear algebra on 2- to 24-dimensional complex matrices:
@@ -451,6 +455,33 @@ Python nor Julia. Regenerate them with:
 uv run reference/sdp_reference.py
 julia --project=reference reference/sdp_reference.jl
 ```
+
+## The channel layer in hardware
+
+[**brokkr**](https://oluies.github.io/brokkr/)
+([oluies/brokkr](https://github.com/oluies/brokkr)) is a design assessment of whether a CUTE-style
+Chisel tensor engine can accelerate quantum simulation, and its conclusion lands on the layer this
+project is built from. A state vector offers too little arithmetic per byte to keep a wide multiplier
+array busy; a density matrix offers 683 flop/byte at ten qubits against 15.9 for the best fused state
+vector, because a channel is two complex matrix products per Kraus operator.
+
+So the engine it builds, `ChannelEngine`, computes exactly `rho -> sum_k K_k rho K_k^dagger` —
+`Channel.apply`, in gates. It is checked against Scotty's own result on 24 cases: four channels
+(depolarizing, amplitude damping, dephasing and **erasure**) over several random states each, square
+and rectangular, with trace preservation and Hermiticity asserted as well, since those hold whatever
+the reference says.
+
+Erasure matters here specifically. It maps a qubit to a qutrit, so its Kraus operators are `3 x 2`
+and `rho`, `K` and the result are three different shapes — and it is one of the three channels whose
+retrocausal capacity this program computes. The engine carried one square dimension for a while and
+could not express it at all; that was recorded as a gap on this project's workload until it was
+closed.
+
+**This is not a cross-validation of the numbers above**, and should not be read as one. The engine
+works in 24-bit fixed point (Q2.22) at dimensions 4 to 12, where its worst deviation from Scotty is
+`1.1e-06`; the reference implementations in the previous section agree with the Scala search to
+`1e-08` or better at up to 24 dimensions in double precision. It is an independent implementation of
+the channel application, three levels down, not an independent check of the capacities.
 
 ## Results storage
 
