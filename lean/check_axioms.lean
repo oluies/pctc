@@ -8,6 +8,7 @@ standard axioms of Lean's logic. The appearance of `sorryAx` anywhere would mean
 -/
 import Pctc.Loop
 import Pctc.BlockDiagonal
+import Pctc.ClosedForms
 
 #print axioms Pctc.loopInput_apply
 #print axioms Pctc.loopEvolved_apply
@@ -24,3 +25,14 @@ import Pctc.BlockDiagonal
 #print axioms Pctc.erasureChoi_invariant
 #print axioms Pctc.erasure_maxInformation_blockDiagonal
 #print axioms Pctc.erasure_doeblinInformation_blockDiagonal
+#print axioms Pctc.trace_le_of_maxFeasible
+#print axioms Pctc.trace_ge_of_doeFeasible
+#print axioms Pctc.depolarizingChoi_eq
+#print axioms Pctc.depolarizing_maxInformation
+#print axioms Pctc.depolarizing_doeblinInformation
+#print axioms Pctc.erasureChoi_eq
+#print axioms Pctc.erasure_maxInformation
+#print axioms Pctc.erasure_doeblinInformation
+#print axioms Pctc.amplitudeDampingChoi_eq
+#print axioms Pctc.amplitudeDamping_maxInformation
+#print axioms Pctc.amplitudeDamping_doeblinInformation

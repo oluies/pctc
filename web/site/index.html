@@ -53,6 +53,9 @@
   table { border-collapse: collapse; font-size: .84rem; width: auto; }
   th, td { padding: .32rem .6rem; border-bottom: 1px solid var(--rule); text-align: left; white-space: nowrap; }
   th { font-weight: 600; color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; }
+  table.wrap td { white-space: normal; vertical-align: top; }
+  table.wrap td:first-child { max-width: 46rem; }
+  table.wrap code { overflow-wrap: anywhere; }
   td.num, th.num { text-align: right; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
   tbody tr:hover { background: var(--panel); }
   .working { color: var(--muted); font-style: italic; }
@@ -95,6 +98,7 @@
     loop. The loop operator is <code>Tr[Ry(theta)] = 2 cos(theta/2)</code>, so the post-selection
     probability is <code>cos^2(theta/2)</code>, and at <code>theta = pi</code> the branch has
     probability exactly zero: the paradox is resolved by never happening.
+    Both facts are <a href="#proofs">proved in Lean</a>.
   </p>
   <span class="timing" id="grandfather-time"></span>
   <div class="scroll" id="grandfather"></div>
@@ -116,7 +120,8 @@ C_retro   = I_max + I_doe                                              Eq. (11)<
     Solved by sweeping a Bloch parametrisation and bisecting <code>lambda</code>, not with a
     semidefinite solver, so every value is an upper bound approached from above. Grid
     <span id="grid-label"></span>; worst deviation from the published closed forms
-    <span id="retrocausal-error"></span>.
+    <span id="retrocausal-error"></span>. The closed forms themselves, and the restriction to
+    block-diagonal operators for the erasure channel, are <a href="#proofs">proved in Lean</a>.
   </p>
   <span class="timing" id="retrocausal-time"></span>
   <div class="scroll" id="retrocausal"></div>
@@ -133,6 +138,45 @@ T-CTC     rho -&gt; z[ C rho C* + Tr_CV(U (rho (x) 1) U*) ] never forbids anythi
   </p>
   <span class="timing" id="comparison-time"></span>
   <div class="scroll" id="comparison"></div>
+
+  <h2 id="proofs">(e) What is proved in Lean</h2>
+  <p class="meta">
+    The tables above are numerics: they agree with the closed forms and with two independent
+    semidefinite solvers, which is evidence but not proof. The identities they rest on are proved in
+    <a href="https://github.com/oluies/pctc/tree/main/lean">Lean&nbsp;4 with Mathlib</a>, and the
+    proofs, together with every Mathlib declaration they depend on, are re-checked by
+    <a href="https://github.com/oluies/kolla">kolla</a>, an independently written Lean kernel. Each
+    rests on Lean's three standard axioms and nothing else.
+  </p>
+  <div class="scroll">
+  <table class="wrap">
+    <thead><tr><th>Claim</th><th>Lean</th></tr></thead>
+    <tbody>
+      <tr><td>noiseless loop: the numerator of Eq. (1) is <code>C rho C* / d^2</code>, <code>C = Tr_CTC(U)</code>, for any <code>U</code></td>
+          <td><a href="https://github.com/oluies/pctc/blob/main/lean/Pctc/Loop.lean"><code>loopNumerator_eq</code></a></td></tr>
+      <tr><td>normalised, that is the P-CTC row of (d): <code>rho -&gt; C rho C* / Tr[C rho C*]</code></td>
+          <td><a href="https://github.com/oluies/pctc/blob/main/lean/Pctc/Loop.lean"><code>loop_normalized_eq</code></a></td></tr>
+      <tr><td>(a) post-selection probability <code>cos^2(theta/2)</code>, exactly 0 at <code>theta = pi</code></td>
+          <td><a href="https://github.com/oluies/pctc/blob/main/lean/Pctc/Loop.lean"><code>grandfather_postSelection</code></a></td></tr>
+      <tr><td>(c) depolarizing: <code>I_max = log2(4(1 - p) + p)</code>, <code>I_doe = -log2 p</code></td>
+          <td><a href="https://github.com/oluies/pctc/blob/main/lean/Pctc/ClosedForms.lean"><code>depolarizing_maxInformation</code>, <code>…_doeblinInformation</code></a></td></tr>
+      <tr><td>(c) erasure: <code>I_max = log2(4(1 - p) + p)</code>, <code>I_doe = -log2 p</code></td>
+          <td><a href="https://github.com/oluies/pctc/blob/main/lean/Pctc/ClosedForms.lean"><code>erasure_maxInformation</code>, <code>…_doeblinInformation</code></a></td></tr>
+      <tr><td>(c) amplitude damping: <code>I_max = log2(2(1 + sqrt(1 - g)) - g)</code>, <code>I_doe = -2 log2(1 - sqrt(1 - g))</code></td>
+          <td><a href="https://github.com/oluies/pctc/blob/main/lean/Pctc/ClosedForms.lean"><code>amplitudeDamping_maxInformation</code>, <code>…_doeblinInformation</code></a></td></tr>
+      <tr><td>(c) erasure: sweeping only block-diagonal qutrits loses nothing, for every <code>p</code></td>
+          <td><a href="https://github.com/oluies/pctc/blob/main/lean/Pctc/BlockDiagonal.lean"><code>erasure_maxInformation_blockDiagonal</code>, <code>…_doeblin…</code></a></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="meta">
+    The closed forms are proved as optimal values of Eqs. (9) and (10) with <code>lambda</code>
+    folded into the variable, the form the semidefinite solvers also use; the step back to
+    <code>log2 lambda</code> is not formalised. Still numerical only: the noisy loop, teleportation,
+    Deutsch's and Allen's models, and the grid search itself. The definitions a reader has to check
+    against the Scala are listed in
+    <a href="https://github.com/oluies/pctc/blob/main/lean/README.md">lean/README.md</a>.
+  </p>
 
   <footer>
     <p>

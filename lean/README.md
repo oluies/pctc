@@ -27,10 +27,19 @@ whole phase group `I₂ + e^{iφ}|e⟩⟨e|` is not needed. The general form is 
 `doeblinInformation_pinch`, for any channel whose Choi operator is invariant under `I ⊗ D`; by
 `choi_invariant` that holds whenever every Kraus operator maps into a single block.
 
+**The closed forms** (`Pctc/ClosedForms.lean`). For the depolarizing, erasure and amplitude-damping
+channels, built from Scotty's Kraus operators, every closed form in `ClosedForms.scala` for `I_max`
+and `I_doe` is the optimal value of its program: `IsLeast (maxValues J) v` for Eq. (9) and
+`IsGreatest (doeValues J) v` for Eq. (10). Each proof gives a feasible operator that reaches `v`
+and a dual operator `Z = ∑ᵢ cᵢ vᵢ vᵢᴴ`, `cᵢ ≥ 0`, with `Tr_{A'}[Z] / d = I`, whose weak-duality
+bound shows nothing feasible does better. The certificates are in the docstrings; for amplitude
+damping, `I_max` is `(1 + k)² = 2 (1 + k) - γ` with `k = √(1 - γ)`, reached at
+`Y = diag(1 + k, k² + k)`.
+
 Not covered: a noisy loop `N`, a non-trivial reference system `R`, a general bipartite `T`,
-post-selected teleportation, Deutsch's and Allen's models, the closed forms for `I_max` and `I_doe`,
-the grid and bisection that approximate them, and the restriction of the qubit sweep to a bounded
-Bloch radius. Those remain checked numerically only.
+post-selected teleportation, Deutsch's and Allen's models, the step from the folded programs back
+to the `log2 λ` of Eqs. (9) and (10), the grid and bisection that approximate them, and the
+restriction of the qubit sweep to a bounded Bloch radius. Those remain checked numerically only.
 
 ## What to trust
 
@@ -50,7 +59,10 @@ is proof.
 | `erasureKraus` | `Channel.erasure` (Scotty) | the three Kraus operators, in Scotty's order |
 | `erasureFlag` | basis element 2 | the flag `\|e⟩` |
 | `erasureChoi` | `Capacities.choiState` | `∑ₖ (I ⊗ Kₖ) Φ (I ⊗ Kₖ)ᴴ` on `(A', B)` |
-| the two constraint forms | `OperatorOrder.minLogLambda` | Eqs. (9) and (10) with `λ` folded in |
+| `depolarizingKraus` | `Channel.depolarizing` (Scotty) | `√(1 - 3p/4) I`, `√(p/4) X`, `√(p/4) Y`, `√(p/4) Z` |
+| `amplitudeDampingKraus` | `Channel.amplitudeDamping` (Scotty) | the two Kraus operators, in Scotty's order |
+| `maxMixed` | `Capacities.maximallyMixed` | `π = I / d` |
+| `maxValues`, `doeValues` | `OperatorOrder.minLogLambda` | the traces Eqs. (9) and (10) reach with `λ` folded in |
 
 `erasureChoi_kept` and `erasureChoi_flag` pin the entries of `erasureChoi` to `(1 - p) Φ` on the
 qubit block and `p π ⊗ |e⟩⟨e|` on the flag, so the invariance is not true of a degenerate
@@ -70,6 +82,17 @@ definition by accident.
 | block-preserving Kraus operators give an invariant Choi operator | `Pctc.choi_invariant` |
 | erasure: `I_max` optimum can be taken block diagonal | `Pctc.erasure_maxInformation_blockDiagonal` |
 | erasure: `I_doe` optimum can be taken block diagonal | `Pctc.erasure_doeblinInformation_blockDiagonal` |
+| weak duality for Eqs. (9) and (10) | `Pctc.trace_le_of_maxFeasible`, `Pctc.trace_ge_of_doeFeasible` |
+| depolarizing: `I_max = log2(4(1 - p) + p)`, Eq. (S199) | `Pctc.depolarizing_maxInformation` |
+| depolarizing: `I_doe = -log2 p`, Eq. (S198) | `Pctc.depolarizing_doeblinInformation` |
+| erasure: `I_max = log2(4(1 - p) + p)`, Eq. (S216) | `Pctc.erasure_maxInformation` |
+| erasure: `I_doe = -log2 p`, Eq. (S215) | `Pctc.erasure_doeblinInformation` |
+| amplitude damping: `I_max = log2(2(1 + √(1 - γ)) - γ)`, Eq. (S223) | `Pctc.amplitudeDamping_maxInformation` |
+| amplitude damping: `I_doe = -2 log2(1 - √(1 - γ))`, Eq. (S222) | `Pctc.amplitudeDamping_doeblinInformation` |
+
+`depolarizingChoi_eq`, `erasureChoi_eq` and `amplitudeDampingChoi_eq` pin each Choi operator
+built from the Kraus operators to its explicit form, the same check `reference/sdp_reference.py`
+makes entry by entry.
 
 ## Building
 
@@ -96,6 +119,7 @@ verdict does not rest on Lean's own kernel alone.
 LEAN4EXPORT=/path/to/lean4export KOLLA_JAR=/path/to/kolla.jar ./kolla-check.sh
 ```
 
-At the time of writing the closure is 18,168 declarations (79 MB), all accepted with none carried
-over, and kolla reports the same three axioms for each headline theorem. It takes about 15 seconds
-on an M5 Pro after a 90-second export.
+At the time of writing the closure of the 26 theorems in `check_axioms.lean` is 18,549
+declarations, all accepted with none carried over, and kolla reports the same three axioms for
+every one of them. The check itself takes seconds; the export and the `lake build` before it take
+the time.
