@@ -469,8 +469,12 @@ It also proves the symmetry argument of [The approximation](#the-approximation):
 channel, every operator feasible in Eq. (9) or (10) has a block-diagonal feasible counterpart with
 the same trace, so sweeping only block-diagonal qutrits loses nothing. That holds for every `p`, and
 averaging over `{I, diag(1, 1, -1)}` is enough, so the full phase group isn't needed.
+
+And it proves the six closed forms for `I_max` and `I_doe` the searches are checked against: for
+each channel, built from Scotty's Kraus operators, the published value is the optimum of Eq. (9) or
+(10), shown by a feasible operator that reaches it and a dual certificate that nothing beats it.
 [`lean/README.md`](lean/README.md) states the scope, the definitions a reader has to trust and what
-is not covered (the noisy loop, the closed forms and the grid search are not).
+is not covered (the noisy loop, the step back to `log2 lambda` and the grid search are not).
 
 ```bash
 cd lean && lake exe cache get && lake build && lake env lean check_axioms.lean

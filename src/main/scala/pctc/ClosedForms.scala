@@ -6,6 +6,10 @@ package pctc
   * Equation numbers in `Sxxx` form refer to the Supplemental Material of arXiv:2509.08965v3,
   * "Retrocausal capacity of a quantum channel", Ji, Lloyd and Wilde. All of these are for a qubit
   * input, `d_A = 2`.
+  *
+  * The six max- and Doeblin informations are proved, as the optimal values of Eqs. (9) and (10)
+  * with `lambda` folded into the variable, in `lean/Pctc/ClosedForms.lean`:
+  * `Pctc.depolarizing_maxInformation` and its five siblings, named after the functions here.
   */
 object ClosedForms:
   private val Log2 = Math.log(2)
