@@ -48,6 +48,20 @@ jobs:
       - name: Run the demonstrations and the model comparison
         run: sbt -batch "run --steps 5 --rounds 6 --no-db"
 
+  lean:
+    name: lean / proofs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: lean
+      - name: Check that no proof depends on sorry
+        working-directory: lean
+        run: |
+          lake env lean check_axioms.lean | tee axioms.txt
+          ! grep -q sorryAx axioms.txt
+
   mill:
     name: mill / JDK 27
     runs-on: ubuntu-latest

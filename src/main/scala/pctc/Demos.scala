@@ -32,7 +32,8 @@ object Demos:
   /** Rotates the CTC qubit by `RY(theta)` inside an otherwise empty loop.
     *
     * The loop operator is `C = Tr[RY(theta)] = 2 cos(theta / 2)`, so the post-selection probability
-    * is `|Tr RY(theta) / d|^2 = cos^2(theta / 2)`. At `theta = pi` the rotation is a bit flip, the
+    * is `|Tr RY(theta) / d|^2 = cos^2(theta / 2)` (`Pctc.grandfather_postSelection` in
+    * `lean/Pctc/Loop.lean`). At `theta = pi` the rotation is a bit flip, the
     * chronology-violating qubit would have to come back as its own negation, and the branch has
     * probability zero: the paradox is resolved by never happening.
     */

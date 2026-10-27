@@ -50,6 +50,10 @@ object Bloch:
     * `I (x) (I_2 + e^{i phi} |e><e|)` for every phase, both operator inequalities are linear in the
     * swept operator, and averaging over that phase group preserves the trace as well as the
     * inequality. The optimum can therefore be taken block diagonal.
+    *
+    * Proved as `Pctc.erasure_maxInformation_blockDiagonal` and
+    * `Pctc.erasure_doeblinInformation_blockDiagonal` in `lean/Pctc/BlockDiagonal.lean`, where the
+    * two-element subgroup `phi in {0, pi}` already suffices.
     */
   def blockQutrit(block: ComplexMatrix, blockTrace: Double): ComplexMatrix =
     val zero = Complex(0)

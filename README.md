@@ -444,7 +444,8 @@ I_doe(N) = -log2 max { tr W : W = W',     pi (x) W <= N(Phi) }    with W = tau /
 This matters for more than arithmetic. The solvers optimise over the **whole Hermitian cone**, where
 the Scala search sweeps a Bloch parametrisation and, for the erasure channel, only block-diagonal
 operators. Agreement is evidence that neither restriction loses anything — the symmetry argument in
-[The approximation](#the-approximation) is checked, not just asserted. The Python fixture also pins
+[The approximation](#the-approximation) is checked, not just asserted, and it is also
+[proved](#proofs-in-lean). The Python fixture also pins
 every Choi operator entry by entry, which tests the Kraus operators and the density-matrix layer
 directly rather than through the capacities.
 
@@ -455,6 +456,29 @@ Python nor Julia. Regenerate them with:
 uv run reference/sdp_reference.py
 julia --project=reference reference/sdp_reference.jl
 ```
+
+## Proofs in Lean
+
+Cross-validation shows the numbers agree; it cannot show that an identity holds. `lean/` proves the
+ones the unitary-loop code rests on, in Lean 4 with Mathlib: for a noiseless loop the numerator of
+Eq. (1) is `C rho C† / d²` with `C = Tr_CTC(U)`, for any `U`; the normalised output is therefore the
+Lloyd et al. evolution; and the grandfather paradox's post-selection probability is `cos²(theta/2)`,
+exactly zero at `theta = pi`. The definitions follow `PctcLoop.evaluate` step by step.
+
+It also proves the symmetry argument of [The approximation](#the-approximation): for the erasure
+channel, every operator feasible in Eq. (9) or (10) has a block-diagonal feasible counterpart with
+the same trace, so sweeping only block-diagonal qutrits loses nothing. That holds for every `p`, and
+averaging over `{I, diag(1, 1, -1)}` is enough, so the full phase group isn't needed.
+[`lean/README.md`](lean/README.md) states the scope, the definitions a reader has to trust and what
+is not covered (the noisy loop, the closed forms and the grid search are not).
+
+```bash
+cd lean && lake exe cache get && lake build && lake env lean check_axioms.lean
+```
+
+`lean/kolla-check.sh` re-checks the proofs and everything they depend on in Mathlib with
+[kolla](https://github.com/oluies/kolla), an independent Lean kernel, so the result doesn't rest on
+Lean's kernel alone.
 
 ## The channel layer in hardware
 

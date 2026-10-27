@@ -78,6 +78,9 @@ object PctcLoop:
     * `rho -> C rho C^dagger / Tr[C rho C^dagger]`, where `C` is `U` partially traced over the CTC
     * factor. The loop map above reproduces exactly that, with a post-selection probability of
     * `Tr[C rho C^dagger] / d_CTC^2`.
+    *
+    * Proved, for any `U` and a trivial reference system, as `Pctc.loopNumerator_eq` and
+    * `Pctc.loop_normalized_eq` in `lean/Pctc/Loop.lean`.
     */
   def loopOperator(unitary: ComplexMatrix, dims: Vector[Int], ctcSubsystem: Int): ComplexMatrix =
     require(unitary.isSquare, "The loop unitary has to be square.")
