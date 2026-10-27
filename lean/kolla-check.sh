@@ -12,7 +12,7 @@ cd "$(dirname "$0")"
 : "${KOLLA_JAR:?set KOLLA_JAR to the kolla CLI assembly jar}"
 
 profile="$(sed 's/.*://' lean-toolchain)"
-work="$(mktemp -d -t pctc-export)"
+work="$(mktemp -d "${TMPDIR:-/tmp}/pctc-export.XXXXXX")"
 trap 'rm -rf "$work"' EXIT
 export_file="$work/pctc.ndjson"
 
