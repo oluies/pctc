@@ -19,7 +19,7 @@ env:
 jobs:
   sbt:
     name: sbt / JDK ${{ matrix.java }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -50,7 +50,7 @@ jobs:
 
   lean:
     name: lean / proofs
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: leanprover/lean-action@v1
@@ -64,7 +64,7 @@ jobs:
 
   mill:
     name: mill / JDK 27
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - name: Check out Scotty
@@ -94,7 +94,7 @@ jobs:
 
   reference:
     name: reference fixtures
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # The fixtures are committed and the Scala suite compares against them with a tolerance, so a
     # last-digit change from a new solver release is informational rather than a failure.
     continue-on-error: true
