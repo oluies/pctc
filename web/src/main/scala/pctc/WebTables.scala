@@ -11,7 +11,8 @@ object WebTables:
     text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
   private def cell(tag: String, content: String, numeric: Boolean): String =
-    val attribute = if numeric then " class=\"num\"" else ""
+    val scope = if tag == "th" then " scope=\"col\"" else ""
+    val attribute = scope + (if numeric then " class=\"num\"" else "")
 
     s"<$tag$attribute>${escape(content)}</$tag>"
 

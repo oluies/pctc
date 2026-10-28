@@ -5,23 +5,47 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Closed timelike curves, numerically</title>
 <meta name="description" content="Three quantum models of a closed timelike curve, computed in your browser.">
+<script>
+  // Applied before the first paint, so a chosen theme never flashes the system one first.
+  try {
+    const theme = localStorage.getItem("pctc-theme");
+    if (theme) document.documentElement.dataset.theme = theme;
+  } catch (e) {}
+</script>
 <style>
   :root {
     --bg: #fbfbfa; --fg: #1a1a18; --muted: #6b6b66; --rule: #ddddd8;
-    --accent: #7a4a1f; --panel: #fff; --warn: #8a5a00;
+    --accent: #7a4a1f; --panel: #fff; --warn: #8a5a00; --control: #85857f;
+    color-scheme: light;
   }
+  /* The theme selector sets data-theme; without one the page follows the system setting. */
   @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not([data-theme="light"]):not([data-theme="sepia"]) {
       --bg: #141414; --fg: #e8e8e4; --muted: #9a9a94; --rule: #2e2e2c;
-      --accent: #d8a05a; --panel: #1c1c1b; --warn: #d8a05a;
+      --accent: #d8a05a; --panel: #1c1c1b; --warn: #d8a05a; --control: #707069;
+      color-scheme: dark;
     }
+  }
+  :root[data-theme="dark"] {
+      --bg: #141414; --fg: #e8e8e4; --muted: #9a9a94; --rule: #2e2e2c;
+      --accent: #d8a05a; --panel: #1c1c1b; --warn: #d8a05a; --control: #707069;
+      color-scheme: dark;
+  }
+  :root[data-theme="sepia"] {
+    --bg: #f4ecd8; --fg: #2b2418; --muted: #5f5644; --rule: #ddd0b0;
+    --accent: #74431a; --panel: #fbf6ea; --warn: #7f5300; --control: #857a5f;
+    color-scheme: light;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0; padding: 0 16px 64px; background: var(--bg); color: var(--fg);
     font: 16px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
-  main { max-width: 1100px; margin: 0 auto; }
+  main, footer { max-width: 1100px; margin-left: auto; margin-right: auto; }
+  .masthead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: .5rem 1rem; }
+  .theme { font-size: .82rem; color: var(--muted); display: flex; align-items: center; gap: .4rem; }
+  .theme select { font: inherit; padding: .2rem .4rem; background: var(--bg); color: var(--fg);
+    border: 1px solid var(--control); border-radius: 3px; }
   h1 { font-size: 1.8rem; margin: 2rem 0 .3rem; letter-spacing: -.01em; }
   h2 { font-size: 1.15rem; margin: 2.5rem 0 .4rem; }
   p { margin: .5rem 0; }
@@ -43,16 +67,17 @@
   }
   .controls label { display: flex; flex-direction: column; font-size: .82rem; color: var(--muted); gap: .25rem; }
   .controls input { width: 7rem; padding: .35rem .5rem; font: inherit; font-size: .9rem;
-    background: var(--bg); color: var(--fg); border: 1px solid var(--rule); border-radius: 3px; }
+    background: var(--bg); color: var(--fg); border: 1px solid var(--control); border-radius: 3px; }
   button {
     font: inherit; font-size: .9rem; padding: .45rem 1.1rem; cursor: pointer;
     background: var(--accent); color: var(--bg); border: 0; border-radius: 3px;
   }
   button:hover { opacity: .88; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   table { border-collapse: collapse; font-size: .84rem; width: auto; }
   th, td { padding: .32rem .6rem; border-bottom: 1px solid var(--rule); text-align: left; white-space: nowrap; }
-  th { font-weight: 600; color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; }
+  th { font-weight: 600; color: var(--muted); font-size: .8rem; }
   table.wrap td { white-space: normal; vertical-align: top; }
   table.wrap td:first-child { max-width: 46rem; }
   table.wrap code { overflow-wrap: anywhere; }
@@ -61,12 +86,22 @@
   .working { color: var(--muted); font-style: italic; }
   .timing { display: block; color: var(--muted); font-size: .8rem; margin: .4rem 0 .2rem; font-variant-numeric: tabular-nums; }
   a { color: var(--accent); }
-  footer { margin-top: 4rem; padding-top: 1.2rem; border-top: 1px solid var(--rule); color: var(--muted); font-size: .85rem; }
+  footer { margin-top: 4rem; margin-bottom: 0; padding-top: 1.2rem; border-top: 1px solid var(--rule); color: var(--muted); font-size: .85rem; }
 </style>
 </head>
 <body>
 <main>
-  <h1>Closed timelike curves, numerically</h1>
+  <div class="masthead">
+    <h1>Closed timelike curves, numerically</h1>
+    <label class="theme">Background
+      <select id="theme">
+        <option value="">System</option>
+        <option value="light">Light</option>
+        <option value="sepia">Sepia</option>
+        <option value="dark">Dark</option>
+      </select>
+    </label>
+  </div>
   <p class="lede">
     Three quantum models of a closed timelike curve, evaluated in your browser. The same Scala that
     runs the command-line program, compiled to JavaScript with Scala.js &mdash; no server does any
@@ -83,16 +118,16 @@
     information-theoretic limits &mdash; and this computes only the right-hand side.
   </div>
 
-  <div class="controls">
-    <label>grid steps per axis<input id="steps" type="number" min="3" max="21" step="2" value="7"></label>
-    <label>refinement rounds<input id="rounds" type="number" min="0" max="50" value="20"></label>
-    <label>grandfather intervals<input id="theta-steps" type="number" min="2" max="64" value="16"></label>
+  <div class="controls" role="group" aria-label="Search grid">
+    <label>grid steps per axis<input id="steps" aria-describedby="grid-hint" type="number" min="3" max="21" step="2" value="7"></label>
+    <label>refinement rounds<input id="rounds" aria-describedby="grid-hint" type="number" min="0" max="50" value="20"></label>
+    <label>grandfather intervals<input id="theta-steps" aria-describedby="grid-hint" type="number" min="2" max="64" value="16"></label>
     <button id="run">Recompute</button>
-    <span class="meta">Higher is slower and more accurate; <code>steps=9, rounds=30</code> reaches the
+    <span class="meta" id="grid-hint">Higher is slower and more accurate; <code>steps=9, rounds=30</code> reaches the
       bisection floor at about 1e-9.</span>
   </div>
 
-  <h2>(a) The grandfather paradox</h2>
+  <h2 id="grandfather-heading">(a) The grandfather paradox</h2>
   <p class="meta">
     The chronology-violating qubit is rotated by <code>Ry(theta)</code> inside an otherwise empty
     loop. The loop operator is <code>Tr[Ry(theta)] = 2 cos(theta/2)</code>, so the post-selection
@@ -100,22 +135,22 @@
     probability exactly zero: the paradox is resolved by never happening.
     Both facts are <a href="#proofs">proved in Lean</a>.
   </p>
-  <span class="timing" id="grandfather-time"></span>
-  <div class="scroll" id="grandfather"></div>
+  <span class="timing" id="grandfather-time" aria-live="polite"></span>
+  <div class="scroll" id="grandfather" role="region" aria-labelledby="grandfather-heading" tabindex="0"></div>
 
-  <h2>(b) Post-selected teleportation</h2>
+  <h2 id="teleportation-heading">(b) Post-selected teleportation</h2>
   <p class="meta">
     A message is Bell-measured against the future end of an entangled pair. That outcome has
     probability 1/4, and conditioned on it the past end carries the message exactly. Inside the loop
     that 1/4 is the denominator, which the loop divides out.
   </p>
-  <span class="timing" id="teleportation-time"></span>
-  <div class="scroll" id="teleportation"></div>
+  <span class="timing" id="teleportation-time" aria-live="polite"></span>
+  <div class="scroll" id="teleportation" role="region" aria-labelledby="teleportation-heading" tabindex="0"></div>
 
-  <h2>(c) Retrocausal capacity of a noisy curve</h2>
-  <div class="eq">I_max(N)  = inf { log2 lambda : N(Phi) &lt;= lambda pi (x) sigma_B }        Eq. (9)
-I_doe(N)  = inf { log2 lambda : pi (x) tau_B &lt;= lambda N(Phi) }        Eq. (10)
-C_retro   = I_max + I_doe                                              Eq. (11)</div>
+  <h2 id="retrocausal-heading">(c) Retrocausal capacity of a noisy curve</h2>
+  <div class="eq">I_max(N)  = inf { log2 lambda : N(Phi) &lt;= lambda pi (x) sigma_B }  Eq. (9)
+I_doe(N)  = inf { log2 lambda : pi (x) tau_B &lt;= lambda N(Phi) }    Eq. (10)
+C_retro   = I_max + I_doe                                          Eq. (11)</div>
   <p class="meta">
     Solved by sweeping a Bloch parametrisation and bisecting <code>lambda</code>, not with a
     semidefinite solver, so every value is an upper bound approached from above. Grid
@@ -123,21 +158,21 @@ C_retro   = I_max + I_doe                                              Eq. (11)<
     <span id="retrocausal-error"></span>. The closed forms themselves, and the restriction to
     block-diagonal operators for the erasure channel, are <a href="#proofs">proved in Lean</a>.
   </p>
-  <span class="timing" id="retrocausal-time"></span>
-  <div class="scroll" id="retrocausal"></div>
+  <span class="timing" id="retrocausal-time" aria-live="polite"></span>
+  <div class="scroll" id="retrocausal" role="region" aria-labelledby="retrocausal-heading" tabindex="0"></div>
 
-  <h2>(d) Three models on the same circuits</h2>
+  <h2 id="comparison-heading">(d) Three models on the same circuits</h2>
   <div class="eq">Deutsch   tau = Tr_CR[U (rho (x) tau) U*]                 always satisfiable, sometimes not uniquely
-P-CTC     rho -&gt; C rho C* / Tr[C rho C*]                forbids a paradox outright
-T-CTC     rho -&gt; z[ C rho C* + Tr_CV(U (rho (x) 1) U*) ] never forbids anything, pays in mixedness</div>
+P-CTC     rho -&gt; C rho C* / Tr[C rho C*]                  forbids a paradox outright
+T-CTC     rho -&gt; z[ C rho C* + Tr_CV(U (rho (x) 1) U*) ]  never forbids anything, pays in mixedness</div>
   <p class="meta">
     Circuits and published solutions from
     <a href="https://arxiv.org/abs/1401.4933">arXiv:1401.4933</a> (Allen), which works all three
     models on each. Deutsch's condition is solved as a kernel, never by iteration: for the
     grandfather paradox the map has period two and an iteration never settles.
   </p>
-  <span class="timing" id="comparison-time"></span>
-  <div class="scroll" id="comparison"></div>
+  <span class="timing" id="comparison-time" aria-live="polite"></span>
+  <div class="scroll" id="comparison" role="region" aria-labelledby="comparison-heading" tabindex="0"></div>
 
   <h2 id="proofs">(e) What is proved in Lean</h2>
   <p class="meta">
@@ -148,9 +183,9 @@ T-CTC     rho -&gt; z[ C rho C* + Tr_CV(U (rho (x) 1) U*) ] never forbids anythi
     <a href="https://github.com/oluies/kolla">kolla</a>, an independently written Lean kernel. Each
     rests on Lean's three standard axioms and nothing else.
   </p>
-  <div class="scroll">
+  <div class="scroll" role="region" aria-labelledby="proofs" tabindex="0">
   <table class="wrap">
-    <thead><tr><th>Claim</th><th>Lean</th></tr></thead>
+    <thead><tr><th scope="col">Claim</th><th scope="col">Lean</th></tr></thead>
     <tbody>
       <tr><td>noiseless loop: the numerator of Eq. (1) is <code>C rho C* / d^2</code>, <code>C = Tr_CTC(U)</code>, for any <code>U</code></td>
           <td><a href="https://github.com/oluies/pctc/blob/main/lean/Pctc/Loop.lean"><code>loopNumerator_eq</code></a></td></tr>
@@ -178,7 +213,8 @@ T-CTC     rho -&gt; z[ C rho C* + Tr_CV(U (rho (x) 1) U*) ] never forbids anythi
     <a href="https://github.com/oluies/pctc/blob/main/lean/README.md">lean/README.md</a>.
   </p>
 
-  <footer>
+</main>
+<footer>
     <p>
       Source: <a href="https://github.com/oluies/pctc">oluies/pctc</a>, built on the density-matrix
       layer of <a href="https://github.com/oluies/scotty/tree/pctc">oluies/scotty</a>. Apache 2.0.
@@ -192,7 +228,20 @@ T-CTC     rho -&gt; z[ C rho C* + Tr_CV(U (rho (x) 1) U*) ] never forbids anythi
       Deutsch, Phys. Rev. D <strong>44</strong>, 3197 (1991)
     </p>
   </footer>
-</main>
+<script>
+  (() => {
+    const select = document.getElementById("theme");
+    select.value = document.documentElement.dataset.theme || "";
+    select.addEventListener("change", () => {
+      const root = document.documentElement;
+      if (select.value) root.dataset.theme = select.value; else delete root.dataset.theme;
+      try {
+        if (select.value) localStorage.setItem("pctc-theme", select.value);
+        else localStorage.removeItem("pctc-theme");
+      } catch (e) {}
+    });
+  })();
+</script>
 <script src="./main.js"></script>
 </body>
 </html>

@@ -16,8 +16,19 @@ object WebMain:
 
   private def input(id: String): html.Input = document.getElementById(id).asInstanceOf[html.Input]
 
+  /** The field's value, held to its `min` and `max`: an out-of-range grid either fails a `require`,
+    * which would leave the page saying "computing" for ever, or locks the tab for minutes. The clamped
+    * value is written back so the field shows what was actually used.
+    */
   private def intValue(id: String, fallback: Int): Int =
-    Option(input(id)).flatMap(i => i.value.toIntOption).getOrElse(fallback)
+    Option(input(id)).fold(fallback) { field =>
+      val low = field.min.toIntOption.getOrElse(Int.MinValue)
+      val high = field.max.toIntOption.getOrElse(Int.MaxValue)
+      val value = field.value.toIntOption.getOrElse(fallback).max(low).min(high)
+
+      field.value = value.toString
+      value
+    }
 
   private def write(id: String, markup: String): Unit = element(id).innerHTML = markup
 
@@ -48,6 +59,9 @@ object WebMain:
     write("retrocausal", "<p class=\"working\">computing the capacity searches...</p>")
     write("comparison", "<p class=\"working\">computing the model comparison...</p>")
     write("grid-label", grid.label)
+    // The timing lines are live regions, so a screen reader hears the search start and finish.
+    write("retrocausal-time", "computing")
+    write("comparison-time", "computing")
 
     setTimeout(0) {
       val parameters = Vector.tabulate(11)(_ / 10d)
