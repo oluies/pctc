@@ -48,6 +48,11 @@ object WebMain:
     write("teleportation", WebTables.teleportation(teleportation))
     write("teleportation-time", f"$teleportationMs%.0f ms")
 
+    val (repetition, repetitionMs) = timed(RepetitionCode.rows)
+
+    write("repetition", WebTables.repetition(repetition))
+    write("repetition-time", f"$repetitionMs%.0f ms")
+
   /** The searches, which are the only part that takes real time. */
   private def renderSearches(): Unit =
     val grid = SearchGrid(
