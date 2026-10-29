@@ -27,9 +27,15 @@ object WebTables:
 
   private def number(value: Double, decimals: Int): String = TextTable.number(value, decimals)
 
+  /** The page writes θ and π. The row labels stay ASCII, since the command line and the result
+    * store share them, so they are converted here, as whole words only.
+    */
+  private def greek(text: String): String =
+    text.replaceAll("\\btheta\\b", "θ").replaceAll("\\bpi\\b", "π")
+
   def grandfather(rows: Seq[GrandfatherRow]): String =
     table(
-      Seq("theta / pi", "P(post-select)", "cos^2(theta/2)", "error"),
+      Seq("θ / π", "P(post-select)", "cos^2(θ/2)", "error"),
       rows.map(r =>
         Seq(
           number(r.theta / Math.PI, 4),
@@ -79,7 +85,7 @@ object WebTables:
       Seq("scenario", "Deutsch solutions", "D purity", "P(post-select)", "P purity", "T purity", "T coherent", "published in"),
       rows.map(r =>
         Seq(
-          r.scenario,
+          greek(r.scenario),
           if r.deutschParameters == 0 then "unique" else s"${r.deutschParameters}-parameter family",
           number(r.deutschOutputPurity, 4),
           if r.pctcForbids then "forbidden" else number(r.pctcProbability, 4),
