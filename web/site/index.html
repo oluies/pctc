@@ -206,6 +206,8 @@ T-CTC     rho -&gt; z[ C rho C* + Tr_CV(U (rho (x) 1) U*) ]  never forbids anyth
           <td><a href="https://github.com/oluies/pctc/blob/main/lean/Pctc/ClosedForms.lean"><code>amplitudeDamping_maxInformation</code>, <code>…_doeblinInformation</code></a></td></tr>
       <tr><td>(c) erasure: sweeping only block-diagonal qutrits loses nothing, for every <code>p</code></td>
           <td><a href="https://github.com/oluies/pctc/blob/main/lean/Pctc/BlockDiagonal.lean"><code>erasure_maxInformation_blockDiagonal</code>, <code>…_doeblin…</code></a></td></tr>
+      <tr><td>(f) majority vote on <code>2t + 1</code> copies corrects every pattern of at most <code>t</code> flips and no more, and fails with exactly the binomial tail probability</td>
+          <td><a href="https://github.com/oluies/pctc/blob/main/lean/Pctc/RepetitionCode.lean"><code>majority_corrects</code>, <code>majority_fails</code>, <code>failureProbability_eq</code></a></td></tr>
     </tbody>
   </table>
   </div>
@@ -218,6 +220,25 @@ T-CTC     rho -&gt; z[ C rho C* + Tr_CV(U (rho (x) 1) U*) ]  never forbids anyth
     <a href="https://github.com/oluies/pctc/blob/main/lean/README.md">lean/README.md</a>.
   </p>
 
+
+  <h2 id="repetition-heading">(f) Side note: why cat qubits need no bit-flip protection</h2>
+  <p class="meta">
+    Not part of the paper above. Alice &amp; Bob estimate that RSA-2048 can be factored with about
+    23&nbsp;000 cat qubits in 3.14 days (<a href="https://eprint.iacr.org/2026/2665">IACR ePrint
+    2026/2665</a>), assuming a phase-flip probability of <code>5e-4</code> per cycle and no bit flips.
+    Without bit flips, a repetition code against phase flips alone is enough. This table shows why, on
+    the same density-matrix layer as (a) to (d): a code on <code>n</code> qubits, noise once on every
+    qubit, then a majority vote. Against phase flips it fails only when more than half the qubits flip,
+    so longer codes fail far less often. Against bit flips it is useless: a single flip turns logical
+    <code>|+⟩</code> into logical <code>|−⟩</code>, the code's checks cannot see it, and longer codes
+    fail more often. The majority-vote facts are <a href="#proofs">proved in Lean</a>.
+  </p>
+  <p class="meta">
+    This is the simplest noise model, a single round with perfect measurement. The paper's figures
+    come from noise during every step of repeated error correction, which this does not reproduce.
+  </p>
+  <span class="timing" id="repetition-time" aria-live="polite"></span>
+  <div class="scroll" id="repetition" role="region" aria-labelledby="repetition-heading" tabindex="0"></div>
 
   <h2 id="notation">Notation and terms</h2>
   <p class="meta">
@@ -320,6 +341,27 @@ T-CTC     rho -&gt; z[ C rho C* + Tr_CV(U (rho (x) 1) U*) ]  never forbids anyth
     <dd>Writing a qubit state as <code>(I + xX + yY + zZ)/2</code>, with X, Y and Z the Pauli matrices and
       <code>x^2 + y^2 + z^2 &lt;= 1</code>, so a search over states becomes a search over a ball.
       <span class="ref">N&amp;C §1.2; Exercise 2.72.</span></dd>
+
+    <dt>cat qubit</dt>
+    <dd>A qubit stored in two coherent states of a microwave resonator, kept apart so that bit
+      flips are exponentially suppressed in the number of photons and almost only phase flips remain.
+      <span class="ref">M. Mirrahimi <em>et al.</em>, New J. Phys. <strong>16</strong>, 045014 (2014),
+      <a href="https://arxiv.org/abs/1312.2017">arXiv:1312.2017</a>; J. Guillaud and M. Mirrahimi,
+      Phys. Rev. X <strong>9</strong>, 041053 (2019),
+      <a href="https://arxiv.org/abs/1904.09474">arXiv:1904.09474</a>.</span></dd>
+
+    <dt>bit flip, phase flip, dephasing</dt>
+    <dd>A bit flip is the error <code>X</code>, which swaps |0⟩ and |1⟩; a phase flip is
+      <code>Z</code>, which swaps |+⟩ and |−⟩. Dephasing applies <code>Z</code> with probability
+      <code>p</code>, <code>rho -&gt; (1 - p) rho + p Z rho Z</code>, and the bit-flip channel does
+      the same with <code>X</code>. <span class="ref">N&amp;C §8.3.3.</span></dd>
+
+    <dt>repetition code, <code>n</code>, majority vote</dt>
+    <dd>The phase-flip repetition code on <code>n</code> qubits, <code>n</code> odd, stores logical
+      |0⟩ as <code>|+⟩^n</code> and logical |1⟩ as <code>|−⟩^n</code>, and is read by measuring every
+      qubit in the |±⟩ basis and taking the majority. With each qubit flipped independently with
+      probability <code>p</code> it fails when more than <code>n/2</code> flip, the binomial tail.
+      <span class="ref">N&amp;C §10.1.1 and §10.1.2.</span></dd>
 
     <dt>Deutsch, P-CTC, T-CTC</dt>
     <dd>Three models of a quantum closed timelike curve. Deutsch's asks that the state on the

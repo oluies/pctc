@@ -4,7 +4,8 @@ import pctc.TextTable.Align.{Left, Right}
 import scala.util.Try
 
 /** Runs the three demonstrations, prints them as plain-text tables, and appends every row to
-  * `results.duckdb`.
+  * `results.duckdb`. The repetition-code side demonstration is printed but not stored: it is not
+  * part of the paper's framework.
   *
   * Nothing here claims that information can be sent backward in time. This is a numerical model of
   * the framework of arXiv:2509.08965, and of the post-selected closed timelike curves of
@@ -29,6 +30,7 @@ object Main:
     println(teleportationTable(teleportation))
     println(retrocausalTable(retrocausal))
     println(comparisonTable(comparison))
+    println(repetitionTable(RepetitionCode.rows))
 
     options.databasePath match
       case None => println("\nDuckDB storage disabled with --no-db; nothing was written.")
@@ -151,6 +153,30 @@ object Main:
        |${TextTable.render(
         Seq("scenario", "D sol.", "D purity", "P(post-select)", "P purity", "T purity", "T coh.", "published in"),
         Seq(Left, Left, Right, Right, Right, Right, Right, Left),
+        body
+      )}""".stripMargin
+
+  private def repetitionTable(rows: Seq[RepetitionRow]): String =
+    val body = rows.map: row =>
+      Seq(
+        row.noise,
+        row.distance.toString,
+        TextTable.scientific(row.probability),
+        TextTable.scientific(row.simulated),
+        TextTable.scientific(row.closedForm)
+      )
+
+    s"""
+       |Side note, not part of arXiv:2509.08965: why cat qubits need no bit-flip protection
+       |    A phase-flip repetition code on n qubits, decoded by majority vote, after noise once on
+       |    every qubit. Phase flips: the failure rate is the binomial tail, more than n/2 flips, and
+       |    falls with n. Bit flips: one is already a logical error the code cannot see, so the rate
+       |    is (1 - (1 - 2p)^n)/2, about n p, and rises with n. 5e-4 is the phase-flip rate assumed
+       |    in IACR ePrint 2026/2665; that paper's figures come from circuit-level noise, not this.
+       |
+       |${TextTable.render(
+        Seq("noise", "n", "p", "simulated", "closed form"),
+        Seq(Left, Right, Right, Right, Right),
         body
       )}""".stripMargin
 

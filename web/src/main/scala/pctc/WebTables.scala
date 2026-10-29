@@ -80,6 +80,21 @@ object WebTables:
       Set(1, 2, 3, 4, 5, 6, 8)
     )
 
+  def repetition(rows: Seq[RepetitionRow]): String =
+    table(
+      Seq("noise", "n", "p", "simulated", "closed form"),
+      rows.map(r =>
+        Seq(
+          r.noise,
+          r.distance.toString,
+          TextTable.scientific(r.probability),
+          TextTable.scientific(r.simulated),
+          TextTable.scientific(r.closedForm)
+        )
+      ),
+      Set(1, 2, 3, 4)
+    )
+
   def comparison(rows: Seq[ComparisonRow]): String =
     table(
       Seq("scenario", "Deutsch solutions", "D purity", "P(post-select)", "P purity", "T purity", "T coherent", "published in"),

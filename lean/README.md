@@ -36,6 +36,14 @@ bound shows nothing feasible does better. The certificates are in the docstrings
 damping, `I_max` is `(1 + k)² = 2 (1 + k) - γ` with `k = √(1 - γ)`, reached at
 `Y = diag(1 + k, k² + k)`.
 
+**The repetition code** (`Pctc/RepetitionCode.lean`), a side section outside the paper. For the
+codeword `b, …, b` of length `2t + 1` and an error pattern `e`, the set of flipped positions,
+majority vote recovers `b` whenever `#e ≤ t`, and some pattern of `t + 1` flips defeats it. With
+every position flipped independently with probability `p`, the probability that it misreads the
+codeword, summed over all patterns, is the binomial tail `∑_{m > n/2} C(n, m) pᵐ (1 - p)ⁿ⁻ᵐ` that
+`RepetitionCode.phaseFlipFailureClosedForm` computes. The quantum side, that a phase flip on `|±⟩`
+acts as a classical flip on the `X`-basis outcome, is checked numerically, not proved.
+
 Not covered: a noisy loop `N`, a non-trivial reference system `R`, a general bipartite `T`,
 post-selected teleportation, Deutsch's and Allen's models, the step from the folded programs back
 to the `log2 λ` of Eqs. (9) and (10), the grid and bisection that approximate them, and the
@@ -89,6 +97,9 @@ definition by accident.
 | erasure: `I_doe = -log2 p`, Eq. (S215) | `Pctc.erasure_doeblinInformation` |
 | amplitude damping: `I_max = log2(2(1 + √(1 - γ)) - γ)`, Eq. (S223) | `Pctc.amplitudeDamping_maxInformation` |
 | amplitude damping: `I_doe = -2 log2(1 - √(1 - γ))`, Eq. (S222) | `Pctc.amplitudeDamping_doeblinInformation` |
+| majority vote on `2t + 1` copies corrects `t` flips | `Pctc.majority_corrects` |
+| … and not `t + 1` | `Pctc.majority_fails` |
+| its failure probability is the binomial tail | `Pctc.failureProbability_eq` |
 
 `depolarizingChoi_eq`, `erasureChoi_eq` and `amplitudeDampingChoi_eq` pin each Choi operator
 built from the Kraus operators to its explicit form, the same check `reference/sdp_reference.py`
@@ -119,7 +130,7 @@ verdict does not rest on Lean's own kernel alone.
 LEAN4EXPORT=/path/to/lean4export KOLLA_JAR=/path/to/kolla.jar ./kolla-check.sh
 ```
 
-At the time of writing the closure of the 26 theorems in `check_axioms.lean` is 18,549
+At the time of writing the closure of the 29 theorems in `check_axioms.lean` is 18,961
 declarations, all accepted with none carried over, and kolla reports the same three axioms for
 every one of them. The check itself takes seconds; the export and the `lake build` before it take
 the time.

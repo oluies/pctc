@@ -70,6 +70,10 @@ object SmokeMain:
       1e-6
     )
 
+    // The repetition-code side note: the density matrix against its closed forms, 1e-6 relative.
+    for row <- RepetitionCode.rows do
+      check(s"${row.noise}, n = ${row.distance}, p = ${row.probability}", row.simulated, row.closedForm, 1e-6 * row.closedForm + 1e-15)
+
     println(if failures == 0 then "\nall checks passed" else s"\n$failures check(s) FAILED")
 
     if failures > 0 then throw new RuntimeException(s"$failures smoke check(s) failed")
