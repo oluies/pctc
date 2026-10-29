@@ -223,7 +223,8 @@ T-CTC     rho -&gt; z[ C rho C* + Tr_CV(U (rho (x) 1) U*) ]  never forbids anyth
   <p class="meta">
     The page writes its formulas in plain text, as the command-line program prints them:
     <code>(x)</code> is the tensor product ⊗, <code>*</code> the conjugate transpose †,
-    <code>^2</code> a square, and <code>lambda</code> the scalar λ. A reference given only as a section, equation or exercise number is to Nielsen &amp; Chuang, <em>Quantum Computation and Quantum Information</em> (Cambridge, 2010), cited below as N&amp;C.
+    <code>^2</code> a square, <code>lambda</code> the scalar λ, and <code>I</code> and <code>1</code>
+    the identity matrix. A reference given only as a section, equation or exercise number is to Nielsen &amp; Chuang, <em>Quantum Computation and Quantum Information</em> (Cambridge, 2010), cited below as N&amp;C.
   </p>
   <dl class="terms">
     <dt id="term-ry"><code>Ry(θ)</code></dt>
@@ -271,12 +272,13 @@ T-CTC     rho -&gt; z[ C rho C* + Tr_CV(U (rho (x) 1) U*) ]  never forbids anyth
     <dt>fidelity, purity</dt>
     <dd>The fidelity reported is the overlap <code>Tr[ψ rho]</code> with a pure target state ψ,
       1 exactly when the two agree; it is the square of the fidelity as N&amp;C define it. The purity is <code>Tr[rho^2]</code>: 1 for a pure state and 1/d for the maximally
-      mixed one. <span class="ref">N&amp;C §9.2.2; Exercise 2.71.</span></dd>
+      mixed state of a d-dimensional system. <span class="ref">N&amp;C §9.2.2; Exercise 2.71.</span></dd>
 
     <dt><code>N</code>, <code>Phi</code>, π, <code>N(Phi)</code></dt>
     <dd><code>N</code> is the noisy channel under study, the curve's noise, from A to B.
       <code>Phi</code> is the maximally entangled state of A and a copy A′.
-      In Eqs. (9) and (10), π is the maximally mixed state <code>I/d</code>; next to θ, as in
+      In Eqs. (9) and (10), π is the maximally mixed state <code>I/d_A</code> on A′, with <code>d_A</code> the
+      dimension of A; next to θ, as in
       <code>θ = π</code> and <code>θ / π</code>, it is the number π ≈ 3.14159. <code>N(Phi)</code>, the channel applied to
       one half of <code>Phi</code>, is the Choi state, which determines the channel completely.
       <span class="ref">M.-D. Choi, Linear Algebra Appl. <strong>10</strong>, 285 (1975); π for the
@@ -315,7 +317,7 @@ T-CTC     rho -&gt; z[ C rho C* + Tr_CV(U (rho (x) 1) U*) ]  never forbids anyth
       Lett. <strong>78</strong>, 3217 (1997), for erasure.</span></dd>
 
     <dt>Bloch parametrisation</dt>
-    <dd>Writing a qubit state as <code>(I + xX + yY + zZ)/2</code> with
+    <dd>Writing a qubit state as <code>(I + xX + yY + zZ)/2</code>, with X, Y and Z the Pauli matrices and
       <code>x^2 + y^2 + z^2 &lt;= 1</code>, so a search over states becomes a search over a ball.
       <span class="ref">N&amp;C §1.2; Exercise 2.72.</span></dd>
 
