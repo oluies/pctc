@@ -86,6 +86,10 @@
   .working { color: var(--muted); font-style: italic; }
   .timing { display: block; color: var(--muted); font-size: .8rem; margin: .4rem 0 .2rem; font-variant-numeric: tabular-nums; }
   a { color: var(--accent); }
+  dl.terms { margin: .8rem 0; font-size: .92rem; }
+  dl.terms dt { font-weight: 600; margin-top: .9rem; }
+  dl.terms dd { margin: .15rem 0 0 1.2rem; max-width: 80ch; }
+  dl.terms .ref { color: var(--muted); font-size: .85rem; }
   footer { margin-top: 4rem; margin-bottom: 0; padding-top: 1.2rem; border-top: 1px solid var(--rule); color: var(--muted); font-size: .85rem; }
 </style>
 </head>
@@ -105,7 +109,8 @@
   <p class="lede">
     Three quantum models of a closed timelike curve, evaluated in your browser. The same Scala that
     runs the command-line program, compiled to JavaScript with Scala.js &mdash; no server does any
-    of this arithmetic.
+    of this arithmetic. Every symbol is defined, with a reference, under
+    <a href="#notation">Notation and terms</a>.
   </p>
 
   <div class="note">
@@ -129,7 +134,7 @@
 
   <h2 id="grandfather-heading">(a) The grandfather paradox</h2>
   <p class="meta">
-    The chronology-violating qubit is rotated by <code>Ry(θ)</code> inside an otherwise empty
+    The chronology-violating qubit is rotated by <a href="#term-ry"><code>Ry(θ)</code></a> inside an otherwise empty
     loop. The loop operator is <code>Tr[Ry(θ)] = 2 cos(θ/2)</code>, so the post-selection
     probability is <code>cos^2(θ/2)</code>, and at <code>θ = π</code> the branch has
     probability exactly zero: the paradox is resolved by never happening.
@@ -213,6 +218,116 @@ T-CTC     rho -&gt; z[ C rho C* + Tr_CV(U (rho (x) 1) U*) ]  never forbids anyth
     <a href="https://github.com/oluies/pctc/blob/main/lean/README.md">lean/README.md</a>.
   </p>
 
+
+  <h2 id="notation">Notation and terms</h2>
+  <p class="meta">
+    The page writes its formulas in plain text, as the command-line program prints them:
+    <code>(x)</code> is the tensor product ⊗, <code>*</code> the conjugate transpose †,
+    <code>^2</code> a square, and <code>lambda</code> the scalar λ. A reference that has no link is
+    to Nielsen &amp; Chuang, <em>Quantum Computation and Quantum Information</em> (Cambridge, 2010), cited below as N&amp;C.
+  </p>
+  <dl class="terms">
+    <dt id="term-ry"><code>Ry(θ)</code></dt>
+    <dd>The single-qubit gate that rotates the Bloch vector by the angle θ about the y axis:
+      <code>Ry(θ) = exp(-iθY/2)</code>, the matrix
+      <code>[[cos θ/2, -sin θ/2], [sin θ/2, cos θ/2]]</code>, with Y the Pauli matrix. Its trace is
+      <code>2 cos(θ/2)</code>. At θ = π it takes |0⟩ to |1⟩ and back, up to a sign: a bit flip,
+      which is why (a) uses it as the qubit that would undo its own past.
+      <span class="ref">N&amp;C §4.2, Eq. (4.5).</span></dd>
+
+    <dt><code>Tr</code>, <code>Tr_X</code></dt>
+    <dd>The trace, the sum of a matrix's diagonal entries. <code>Tr_X</code> is the partial trace
+      over subsystem X, which discards X and leaves the state of the rest; <code>Tr_CTC</code>,
+      <code>Tr_CR</code> and <code>Tr_CV</code> discard the curve's system, the
+      chronology-respecting one and the chronology-violating one.
+      <span class="ref">N&amp;C §2.4.3.</span></dd>
+
+    <dt><code>U</code>, <code>C = Tr_CTC(U)</code>, <code>d</code></dt>
+    <dd><code>U</code> is the unitary acting on the ordinary system together with the system on the
+      curve. Tracing out the curve's system leaves the loop operator <code>C</code>, which acts on
+      the ordinary system alone; <code>d</code> is the dimension of the curve's system.
+      <span class="ref">Lloyd <em>et al.</em>, Phys. Rev. Lett. <strong>106</strong>, 040403 (2011),
+      <a href="https://arxiv.org/abs/1005.2219">arXiv:1005.2219</a>.</span></dd>
+
+    <dt><code>rho</code>, <code>tau</code></dt>
+    <dd>Density matrices: <code>rho</code> the state entering the circuit, <code>tau</code> the
+      state on the curve in Deutsch's model. <span class="ref">N&amp;C §2.4.</span></dd>
+
+    <dt>post-selection, <code>P(post-select)</code></dt>
+    <dd>Keeping only the runs in which a measurement gave a chosen outcome, and renormalising by
+      that outcome's probability. A P-CTC is a curve built this way; <code>P(post-select)</code> is
+      the probability of the kept outcome, the denominator the loop divides by.
+      <span class="ref">S. Aaronson, Proc. R. Soc. A <strong>461</strong>, 3473 (2005),
+      <a href="https://arxiv.org/abs/quant-ph/0412187">arXiv:quant-ph/0412187</a>; Lloyd
+      <em>et al.</em>, above.</span></dd>
+
+    <dt>Bell measurement, <code>Phi+</code>, teleportation</dt>
+    <dd>A measurement of two qubits in the basis of the four maximally entangled Bell states, of
+      which <code>Phi+ = (|00⟩ + |11⟩)/√2</code> is one. Teleportation sends a qubit using a shared
+      Bell pair, a Bell measurement and a correction chosen by its outcome; post-selecting the
+      <code>Phi+</code> outcome makes the correction unnecessary.
+      <span class="ref">N&amp;C §1.3.6 and §1.3.7; Bennett <em>et al.</em>, Phys. Rev. Lett.
+      <strong>70</strong>, 1895 (1993).</span></dd>
+
+    <dt>fidelity, purity</dt>
+    <dd>The fidelity reported is the overlap <code>Tr[ψ rho]</code> with a pure target state ψ,
+      1 exactly when the two agree; it is the square of the fidelity as N&amp;C define it. The purity is <code>Tr[rho^2]</code>: 1 for a pure state and 1/d for the maximally
+      mixed one. <span class="ref">N&amp;C §9.2.2; Exercise 2.71.</span></dd>
+
+    <dt><code>Phi</code>, <code>pi</code> (π), <code>N(Phi)</code></dt>
+    <dd><code>Phi</code> is the maximally entangled state of the channel's input A and a copy A′.
+      π is the maximally mixed state <code>I/d</code>. <code>N(Phi)</code>, the channel applied to
+      one half of <code>Phi</code>, is the Choi state, which determines the channel completely.
+      <span class="ref">M.-D. Choi, Linear Algebra Appl. <strong>10</strong>, 285 (1975); π for the
+      maximally mixed state follows M. M. Wilde, <em>Quantum Information Theory</em> (Cambridge,
+      2017), <a href="https://arxiv.org/abs/1106.1445">arXiv:1106.1445</a>.</span></dd>
+
+    <dt><code>sigma_B</code>, <code>tau_B</code>, <code>&lt;=</code></dt>
+    <dd>A state and a unit-trace Hermitian operator on the channel's output B, each optimised over
+      in Eqs. (9) and (10). Between operators, <code>A &lt;= B</code> is the positive semidefinite
+      order: <code>B - A</code> has no negative eigenvalue.
+      <span class="ref">J. Watrous, <em>The Theory of Quantum Information</em> (Cambridge,
+      2018).</span></dd>
+
+    <dt><code>I_max</code>, <code>I_doe</code>, <code>C_retro</code></dt>
+    <dd>The max-information and Doeblin information of the channel, Eqs. (9) and (10), and their
+      sum, Eq. (11), reported here as the retrocausal capacity of the noisy curve. Strictly, the
+      paper's capacity uses the regularised Doeblin information; that equals <code>I_doe</code> for
+      the depolarizing and erasure channels, and for amplitude damping <code>I_doe</code> is a lower
+      bound on it. <code>I_max</code> is a max-relative entropy, minimised over
+      <code>sigma_B</code>. <span class="ref">Ji, Lloyd &amp; Wilde,
+      <a href="https://arxiv.org/abs/2509.08965">arXiv:2509.08965</a>; N. Datta, IEEE Trans. Inf.
+      Theory <strong>55</strong>, 2816 (2009), for the max-relative entropy.</span></dd>
+
+    <dt><code>C_ordinary</code>, beats it</dt>
+    <dd>The channel's ordinary classical capacity, with no curve, as Holevo, Schumacher and
+      Westmoreland characterise it. "beats it" says whether <code>C_retro</code> is larger.
+      <span class="ref">A. S. Holevo, IEEE Trans. Inf. Theory <strong>44</strong>, 269 (1998);
+      B. Schumacher and M. D. Westmoreland, Phys. Rev. A <strong>56</strong>, 131 (1997).</span></dd>
+
+    <dt>depolarizing, erasure, amplitude damping; <code>p</code>, <code>g</code></dt>
+    <dd>The three noisy channels swept in (c). The depolarizing channel replaces the qubit with
+      the maximally mixed state with probability <code>p</code>; the erasure channel replaces it
+      with an orthogonal "erased" flag with probability <code>p</code>; amplitude damping relaxes
+      |1⟩ to |0⟩ with probability <code>g</code> (γ), as a decaying atom does.
+      <span class="ref">N&amp;C §8.3.4 and §8.3.5; Bennett, DiVincenzo &amp; Smolin, Phys. Rev.
+      Lett. <strong>78</strong>, 3217 (1997), for erasure.</span></dd>
+
+    <dt>Bloch parametrisation</dt>
+    <dd>Writing a qubit state as <code>(I + xX + yY + zZ)/2</code> with
+      <code>x^2 + y^2 + z^2 &lt;= 1</code>, so a search over states becomes a search over a ball.
+      <span class="ref">N&amp;C §1.2; Exercise 2.72.</span></dd>
+
+    <dt>Deutsch, P-CTC, T-CTC</dt>
+    <dd>Three models of a quantum closed timelike curve. Deutsch's asks that the state on the
+      curve be a fixed point of the evolution; P-CTCs post-select, as above; Allen's T-CTCs keep
+      the post-selected term and add the ordinary channel to it. "Deutsch solutions" counts the
+      free parameters of the fixed points, "unique" meaning there is just one; "T coherent" is the
+      share of the T-CTC output that comes from the post-selected term.
+      <span class="ref">D. Deutsch, Phys. Rev. D <strong>44</strong>, 3197 (1991); Lloyd
+      <em>et al.</em>, above; J.-M. A. Allen, Phys. Rev. A <strong>90</strong>, 042107 (2014),
+      <a href="https://arxiv.org/abs/1401.4933">arXiv:1401.4933</a>.</span></dd>
+  </dl>
 </main>
 <footer>
     <p>
