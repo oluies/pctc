@@ -129,9 +129,9 @@
 
   <h2 id="grandfather-heading">(a) The grandfather paradox</h2>
   <p class="meta">
-    The chronology-violating qubit is rotated by <code>Ry(theta)</code> inside an otherwise empty
-    loop. The loop operator is <code>Tr[Ry(theta)] = 2 cos(theta/2)</code>, so the post-selection
-    probability is <code>cos^2(theta/2)</code>, and at <code>theta = pi</code> the branch has
+    The chronology-violating qubit is rotated by <code>Ry(θ)</code> inside an otherwise empty
+    loop. The loop operator is <code>Tr[Ry(θ)] = 2 cos(θ/2)</code>, so the post-selection
+    probability is <code>cos^2(θ/2)</code>, and at <code>θ = π</code> the branch has
     probability exactly zero: the paradox is resolved by never happening.
     Both facts are <a href="#proofs">proved in Lean</a>.
   </p>
@@ -148,9 +148,9 @@
   <div class="scroll" id="teleportation" role="region" aria-labelledby="teleportation-heading" tabindex="0"></div>
 
   <h2 id="retrocausal-heading">(c) Retrocausal capacity of a noisy curve</h2>
-  <div class="eq" role="region" aria-label="Eqs. (9) to (11)" tabindex="0">I_max(N)  = inf { log2 lambda : N(Phi) &lt;= lambda pi (x) sigma_B }  Eq. (9)
-I_doe(N)  = inf { log2 lambda : pi (x) tau_B &lt;= lambda N(Phi) }    Eq. (10)
-C_retro   = I_max + I_doe                                          Eq. (11)</div>
+  <div class="eq" role="region" aria-label="Eqs. (9) to (11)" tabindex="0">I_max(N)  = inf { log2 lambda : N(Phi) &lt;= lambda π (x) sigma_B }  Eq. (9)
+I_doe(N)  = inf { log2 lambda : π (x) tau_B &lt;= lambda N(Phi) }    Eq. (10)
+C_retro   = I_max + I_doe                                         Eq. (11)</div>
   <p class="meta">
     Solved by sweeping a Bloch parametrisation and bisecting <code>lambda</code>, not with a
     semidefinite solver, so every value is an upper bound approached from above. Grid
@@ -191,7 +191,7 @@ T-CTC     rho -&gt; z[ C rho C* + Tr_CV(U (rho (x) 1) U*) ]  never forbids anyth
           <td><a href="https://github.com/oluies/pctc/blob/main/lean/Pctc/Loop.lean"><code>loopNumerator_eq</code></a></td></tr>
       <tr><td>normalised, that is the P-CTC row of (d): <code>rho -&gt; C rho C* / Tr[C rho C*]</code></td>
           <td><a href="https://github.com/oluies/pctc/blob/main/lean/Pctc/Loop.lean"><code>loop_normalized_eq</code></a></td></tr>
-      <tr><td>(a) post-selection probability <code>cos^2(theta/2)</code>, exactly 0 at <code>theta = pi</code></td>
+      <tr><td>(a) post-selection probability <code>cos^2(θ/2)</code>, exactly 0 at <code>θ = π</code></td>
           <td><a href="https://github.com/oluies/pctc/blob/main/lean/Pctc/Loop.lean"><code>grandfather_postSelection</code></a></td></tr>
       <tr><td>(c) depolarizing: <code>I_max = log2(4(1 - p) + p)</code>, <code>I_doe = -log2 p</code></td>
           <td><a href="https://github.com/oluies/pctc/blob/main/lean/Pctc/ClosedForms.lean"><code>depolarizing_maxInformation</code>, <code>…_doeblinInformation</code></a></td></tr>
