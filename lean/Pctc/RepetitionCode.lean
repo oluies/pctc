@@ -9,7 +9,7 @@ two facts the page's simulation rests on:
 
 * majority vote on `2t + 1` copies corrects every pattern of at most `t` flips, and no more;
 * with each copy flipped independently with probability `p`, the decoder fails with exactly the
-  binomial tail probability, `RepetitionCode.phaseFlipFailure` in the Scala.
+  binomial tail probability, `RepetitionCode.phaseFlipFailureClosedForm` in the Scala.
 
 An error pattern is the set of positions that flipped.
 -/

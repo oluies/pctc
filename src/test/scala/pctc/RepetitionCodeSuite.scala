@@ -3,13 +3,16 @@ package pctc
 class RepetitionCodeSuite extends munit.FunSuite:
   private def assertRelative(actual: Double, expected: Double, relative: Double)(using munit.Location): Unit =
     assert(
-      Math.abs(actual - expected) <= relative * Math.abs(expected) + 1e-15,
+      Math.abs(actual - expected) <= relative * Math.abs(expected) + 1e-20,
       s"$actual differs from $expected by more than $relative relative"
     )
 
+  // 1e-5 relative because of the smallest row: at n = 7 and p = 5e-4 the failure rate is 2.2e-12, a
+  // sum of diagonal entries near 1e-12 in a matrix whose entries are near 1e-2, and double rounding
+  // leaves it accurate to about 7.5e-6. Every other row agrees to better than 1e-7.
   test("every simulated row matches its closed form") {
     RepetitionCode.rows.foreach: row =>
-      assertRelative(row.simulated, row.closedForm, 1e-6)
+      assertRelative(row.simulated, row.closedForm, 1e-5)
   }
 
   test("a single qubit fails with exactly the flip probability under either noise") {
