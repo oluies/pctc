@@ -223,8 +223,7 @@ T-CTC     rho -&gt; z[ C rho C* + Tr_CV(U (rho (x) 1) U*) ]  never forbids anyth
   <p class="meta">
     The page writes its formulas in plain text, as the command-line program prints them:
     <code>(x)</code> is the tensor product ⊗, <code>*</code> the conjugate transpose †,
-    <code>^2</code> a square, and <code>lambda</code> the scalar λ. A reference that has no link is
-    to Nielsen &amp; Chuang, <em>Quantum Computation and Quantum Information</em> (Cambridge, 2010), cited below as N&amp;C.
+    <code>^2</code> a square, and <code>lambda</code> the scalar λ. A reference given only as a section, equation or exercise number is to Nielsen &amp; Chuang, <em>Quantum Computation and Quantum Information</em> (Cambridge, 2010), cited below as N&amp;C.
   </p>
   <dl class="terms">
     <dt id="term-ry"><code>Ry(θ)</code></dt>
@@ -274,9 +273,11 @@ T-CTC     rho -&gt; z[ C rho C* + Tr_CV(U (rho (x) 1) U*) ]  never forbids anyth
       1 exactly when the two agree; it is the square of the fidelity as N&amp;C define it. The purity is <code>Tr[rho^2]</code>: 1 for a pure state and 1/d for the maximally
       mixed one. <span class="ref">N&amp;C §9.2.2; Exercise 2.71.</span></dd>
 
-    <dt><code>Phi</code>, <code>pi</code> (π), <code>N(Phi)</code></dt>
-    <dd><code>Phi</code> is the maximally entangled state of the channel's input A and a copy A′.
-      π is the maximally mixed state <code>I/d</code>. <code>N(Phi)</code>, the channel applied to
+    <dt><code>N</code>, <code>Phi</code>, π, <code>N(Phi)</code></dt>
+    <dd><code>N</code> is the noisy channel under study, the curve's noise, from A to B.
+      <code>Phi</code> is the maximally entangled state of A and a copy A′.
+      In Eqs. (9) and (10), π is the maximally mixed state <code>I/d</code>; next to θ, as in
+      <code>θ = π</code> and <code>θ / π</code>, it is the number π ≈ 3.14159. <code>N(Phi)</code>, the channel applied to
       one half of <code>Phi</code>, is the Choi state, which determines the channel completely.
       <span class="ref">M.-D. Choi, Linear Algebra Appl. <strong>10</strong>, 285 (1975); π for the
       maximally mixed state follows M. M. Wilde, <em>Quantum Information Theory</em> (Cambridge,
@@ -321,7 +322,9 @@ T-CTC     rho -&gt; z[ C rho C* + Tr_CV(U (rho (x) 1) U*) ]  never forbids anyth
     <dt>Deutsch, P-CTC, T-CTC</dt>
     <dd>Three models of a quantum closed timelike curve. Deutsch's asks that the state on the
       curve be a fixed point of the evolution; P-CTCs post-select, as above; Allen's T-CTCs keep
-      the post-selected term and add the ordinary channel to it. "Deutsch solutions" counts the
+      the post-selected term and add the ordinary channel to it. In the T-CTC line of (d),
+      <code>1</code> is the identity on the curve's system, deliberately not divided by its
+      dimension (Allen, Eq. (33)), and <code>z</code> is the constant that rescales the sum to unit trace. "Deutsch solutions" counts the
       free parameters of the fixed points, "unique" meaning there is just one; "T coherent" is the
       share of the T-CTC output that comes from the post-selected term.
       <span class="ref">D. Deutsch, Phys. Rev. D <strong>44</strong>, 3197 (1991); Lloyd
