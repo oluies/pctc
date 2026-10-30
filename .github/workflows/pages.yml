@@ -16,7 +16,7 @@ permissions:
 
 env:
   SCOTTY_REPOSITORY: oluies/scotty
-  SCOTTY_REF: pctc
+  SCOTTY_REF: v0.7.0
 
 jobs:
   build:

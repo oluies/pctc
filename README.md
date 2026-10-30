@@ -40,22 +40,25 @@ qubits, and does not use a semidefinite-programming solver (see
 
 ## Prerequisites
 
-Scotty's `pctc` branch, installed locally:
+Scotty 0.7.0, installed locally from its release tag:
 
 ```bash
-git clone -b pctc https://github.com/oluies/scotty.git
+git clone -b v0.7.0 https://github.com/oluies/scotty.git
 cd scotty
 sbt publishLocal publishM2       # or: ./mill scotty.publishM2Local
 ```
 
+0.7.0 is also [published to GitHub Packages](https://github.com/oluies/scotty/releases/tag/v0.7.0);
+resolving it from there needs a token with `read:packages`, as Scotty's README describes.
+
 This project targets **Scala 3.9 LTS**, is built and tested on the latest JDK (27 at the time of
 writing), and emits bytecode for JDK 21.
-It depends on `xyz.entangled::scotty:0.7.0-SNAPSHOT`; the only other non-test dependency is
+It depends on `io.github.oluies::scotty:0.7.0`; the only other non-test dependency is
 `org.duckdb:duckdb_jdbc`, used only by the `Main` / `Results` / `Query` layer, with
 `org.scalameta::munit` for tests.
 
-CI builds Scotty from source before every job, since it is not on Maven Central at this version:
-`.github/workflows/ci.yml` checks out `oluies/scotty` at branch `pctc`, runs `publishLocal publishM2`
+CI builds Scotty from source before every job, since it is not on Maven Central and GitHub Packages
+needs a token to read: `.github/workflows/ci.yml` checks out `oluies/scotty` at tag `v0.7.0`, runs `publishLocal publishM2`
 there, and only then compiles and tests this project — under sbt on JDK 21, 25 and 27, and under
 Mill on 27. A third job regenerates the cvxpy fixture and reports any drift without failing the
 build.
