@@ -5,7 +5,7 @@ import mill.scalalib.*
 
 /** Mill build for the P-CTC simulation, kept in sync with build.sbt.
   *
-  * Scotty 0.7.0, tag v0.7.0 of oluies/scotty, has to be installed first with
+  * Scotty 0.7.1, tag v0.7.1 of oluies/scotty, has to be installed first with
   * `./mill scotty.publishM2Local` (or `sbt publishM2`) in a checkout of that tag.
   *
   * Usage: `mill pctc.run`, `mill pctc.test`, `mill pctc.runMain pctc.Query`.
@@ -18,7 +18,7 @@ object pctc extends ScalaModule {
   def mainClass = Some("pctc.Main")
 
   def mvnDeps = Seq(
-    mvn"io.github.oluies::scotty:0.7.0",
+    mvn"io.github.oluies::scotty:0.7.1",
     mvn"org.duckdb:duckdb_jdbc:1.5.6.0"
   )
 

@@ -15,7 +15,7 @@ env:
   # builds the release tag from source and installs it locally first. Keep the tag in step with the
   # `scottyVersion` in build.sbt.
   SCOTTY_REPOSITORY: oluies/scotty
-  SCOTTY_REF: v0.7.0
+  SCOTTY_REF: v0.7.1
 
 jobs:
   sbt:
