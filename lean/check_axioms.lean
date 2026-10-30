@@ -40,3 +40,6 @@ import Pctc.RepetitionCode
 #print axioms Pctc.majority_corrects
 #print axioms Pctc.majority_fails
 #print axioms Pctc.failureProbability_eq
+#print axioms Pctc.majority_nine_corrects
+#print axioms Pctc.recursiveMajority_corrects
+#print axioms Pctc.recursiveMajority_fails
