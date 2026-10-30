@@ -11,6 +11,10 @@ two facts the page's simulation rests on:
 * with each copy flipped independently with probability `p`, the decoder fails with exactly the
   binomial tail probability, `RepetitionCode.phaseFlipFailureClosedForm` in the Scala.
 
+It also proves what a cheaper decoder gives up. Recursive majority on nine copies, the majority of
+three majorities of three, is what brokkr's `RecursiveMajority` builds: it corrects every pattern of
+three flips but not every pattern of four, where exact majority on nine corrects four.
+
 An error pattern is the set of positions that flipped.
 -/
 
@@ -73,5 +77,49 @@ theorem failureProbability_eq (n : ℕ) (p : ℝ) :
   simp only [card_univ, Fintype.card_fin, nsmul_eq_mul]
   refine sum_congr rfl fun m _ => ?_
   split_ifs <;> simp_all [mul_assoc]
+
+/-! ### Recursive majority on nine copies -/
+
+/-- Majority of three bits. -/
+def maj3 (a b c : Bool) : Bool := (a && b) || (b && c) || (a && c)
+
+/-- The majority of the majorities of positions `0–2`, `3–5` and `6–8`. -/
+def recursiveMajority (r : Fin 9 → Bool) : Bool :=
+  maj3 (maj3 (r 0) (r 1) (r 2)) (maj3 (r 3) (r 4) (r 5)) (maj3 (r 6) (r 7) (r 8))
+
+/-- Exact majority on nine copies corrects four flips: `majority_corrects` at `t = 4`. -/
+theorem majority_nine_corrects (b : Bool) (e : Finset (Fin 9)) (he : #e ≤ 4) :
+    majority (received b e) = b :=
+  majority_corrects (t := 4) b e he
+
+/-- The whole case analysis, over the codeword and the nine flip bits: 1024 cases, checked by the
+kernel. -/
+theorem recursiveMajority_bits : ∀ b e₀ e₁ e₂ e₃ e₄ e₅ e₆ e₇ e₈ : Bool,
+    e₀.toNat + e₁.toNat + e₂.toNat + e₃.toNat + e₄.toNat + e₅.toNat + e₆.toNat + e₇.toNat + e₈.toNat ≤ 3 →
+    maj3 (maj3 (b ^^ e₀) (b ^^ e₁) (b ^^ e₂)) (maj3 (b ^^ e₃) (b ^^ e₄) (b ^^ e₅))
+      (maj3 (b ^^ e₆) (b ^^ e₇) (b ^^ e₈)) = b := by
+  decide
+
+theorem card_eq_sum_toNat (e : Finset (Fin 9)) : #e = ∑ i : Fin 9, (decide (i ∈ e)).toNat := by
+  have h : ∀ i : Fin 9, (decide (i ∈ e)).toNat = if i ∈ e then 1 else 0 := fun i => by
+    by_cases hi : i ∈ e <;> simp [hi]
+  simp only [h, sum_boole, Nat.cast_id, filter_mem_eq_inter, univ_inter]
+
+theorem received_eq_xor (b : Bool) (e : Finset (Fin 9)) (i : Fin 9) :
+    received b e i = (b ^^ decide (i ∈ e)) := by
+  by_cases hi : i ∈ e <;> simp [received, hi]
+
+/-- Recursive majority on nine copies corrects every pattern of at most three flips. -/
+theorem recursiveMajority_corrects (b : Bool) (e : Finset (Fin 9)) (he : #e ≤ 3) :
+    recursiveMajority (received b e) = b := by
+  rw [card_eq_sum_toNat] at he
+  simp only [Fin.sum_univ_succ, Fin.sum_univ_zero] at he
+  simp only [recursiveMajority, received_eq_xor]
+  exact recursiveMajority_bits b _ _ _ _ _ _ _ _ _ (by simpa [add_assoc] using he)
+
+/-- … and two flips in each of two groups defeat it with only four, which exact majority corrects. -/
+theorem recursiveMajority_fails (b : Bool) :
+    ∃ e : Finset (Fin 9), #e = 4 ∧ recursiveMajority (received b e) ≠ b :=
+  ⟨{0, 1, 3, 4}, by decide, by cases b <;> decide⟩
 
 end Pctc

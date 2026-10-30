@@ -208,6 +208,8 @@ T-CTC     rho -&gt; z[ C rho C* + Tr_CV(U (rho (x) 1) U*) ]  never forbids anyth
           <td><a href="https://github.com/oluies/pctc/blob/main/lean/Pctc/BlockDiagonal.lean"><code>erasure_maxInformation_blockDiagonal</code>, <code>…_doeblin…</code></a></td></tr>
       <tr><td>(f) majority vote on <code>2t + 1</code> copies corrects every pattern of at most <code>t</code> flips and no more, and fails with exactly the binomial tail probability</td>
           <td><a href="https://github.com/oluies/pctc/blob/main/lean/Pctc/RepetitionCode.lean"><code>majority_corrects</code>, <code>majority_fails</code>, <code>failureProbability_eq</code></a></td></tr>
+      <tr><td>(f) on nine copies, recursive majority, the majority of three majorities of three, corrects three flips but not four, where exact majority corrects four</td>
+          <td><a href="https://github.com/oluies/pctc/blob/main/lean/Pctc/RepetitionCode.lean"><code>recursiveMajority_corrects</code>, <code>recursiveMajority_fails</code>, <code>majority_nine_corrects</code></a></td></tr>
     </tbody>
   </table>
   </div>
@@ -236,6 +238,15 @@ T-CTC     rho -&gt; z[ C rho C* + Tr_CV(U (rho (x) 1) U*) ]  never forbids anyth
   <p class="meta">
     This is the simplest noise model, a single round with perfect measurement. The paper's figures
     come from noise during every step of repeated error correction, which this does not reproduce.
+  </p>
+  <p class="meta">
+    A cheaper decoder gives something up. On nine qubits, the majority of three majorities of three
+    synthesises to 16 generic gates where the exact majority needs 37, but two flips in each of two
+    groups defeat it: it corrects only three flips
+    where the exact majority corrects four, and at <code>p = 5e-4</code> it fails about 430 times
+    as often, 1.7e-12 against 3.9e-15. Both decoders are built in Chisel in
+    <a href="https://github.com/oluies/brokkr">brokkr</a>, and the correction limits are
+    <a href="#proofs">proved in Lean</a>.
   </p>
   <span class="timing" id="repetition-time" aria-live="polite"></span>
   <div class="scroll" id="repetition" role="region" aria-labelledby="repetition-heading" tabindex="0"></div>

@@ -44,6 +44,14 @@ codeword, summed over all patterns, is the binomial tail `∑_{m > n/2} C(n, m) 
 `RepetitionCode.phaseFlipFailureClosedForm` computes. The quantum side, that a phase flip on `|±⟩`
 acts as a classical flip on the `X`-basis outcome, is checked numerically, not proved.
 
+The same file weighs a cheaper decoder. Recursive majority on nine copies, the majority of three
+majorities of three, corrects every pattern of three flips (`recursiveMajority_corrects`), but two
+flips in each of two groups defeat it with four (`recursiveMajority_fails`), which exact majority
+on nine corrects (`majority_nine_corrects`). The three-flip case is the kernel checking all 1024
+assignments of the codeword and nine flip bits with `decide`. Its failure probability,
+`3q² - 2q³` with `q = 3p² - 2p³`, is not proved; at `p = 5e-4` it is about 1.7e-12 against 3.9e-15
+for exact majority.
+
 Not covered: a noisy loop `N`, a non-trivial reference system `R`, a general bipartite `T`,
 post-selected teleportation, Deutsch's and Allen's models, the step from the folded programs back
 to the `log2 λ` of Eqs. (9) and (10), the grid and bisection that approximate them, and the
@@ -100,6 +108,9 @@ definition by accident.
 | majority vote on `2t + 1` copies corrects `t` flips | `Pctc.majority_corrects` |
 | … and not `t + 1` | `Pctc.majority_fails` |
 | its failure probability is the binomial tail | `Pctc.failureProbability_eq` |
+| exact majority on nine copies corrects four flips | `Pctc.majority_nine_corrects` |
+| recursive majority on nine copies corrects three | `Pctc.recursiveMajority_corrects` |
+| … and not four | `Pctc.recursiveMajority_fails` |
 
 `depolarizingChoi_eq`, `erasureChoi_eq` and `amplitudeDampingChoi_eq` pin each Choi operator
 built from the Kraus operators to its explicit form, the same check `reference/sdp_reference.py`
@@ -130,7 +141,7 @@ verdict does not rest on Lean's own kernel alone.
 LEAN4EXPORT=/path/to/lean4export KOLLA_JAR=/path/to/kolla.jar ./kolla-check.sh
 ```
 
-At the time of writing the closure of the 29 theorems in `check_axioms.lean` is 18,961
+At the time of writing the closure of the 32 theorems in `check_axioms.lean` is 19,031
 declarations, all accepted with none carried over, and kolla reports the same three axioms for
 every one of them. The check itself takes seconds; the export and the `lake build` before it take
 the time.

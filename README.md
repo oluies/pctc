@@ -475,7 +475,9 @@ each channel, built from Scotty's Kraus operators, the published value is the op
 (10), shown by a feasible operator that reaches it and a dual certificate that nothing beats it.
 Outside the paper, it proves what the repetition-code side note rests on: majority vote on `2t + 1`
 copies corrects every pattern of at most `t` flips and no more, and with independent flips it
-fails with exactly the binomial tail probability the simulation is checked against.
+fails with exactly the binomial tail probability the simulation is checked against. Recursive
+majority on nine copies, a cheaper decoder, corrects only three flips where exact majority corrects
+four.
 [`lean/README.md`](lean/README.md) states the scope, the definitions a reader has to trust and what
 is not covered (the noisy loop, the step back to `log2 lambda` and the grid search are not).
 
