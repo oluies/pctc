@@ -11,10 +11,11 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # Scotty is not on Maven Central at this version, so every job builds it from source and installs
-  # it locally first. Keep these in step with the `scottyVersion` in build.sbt.
+  # Scotty is not on Maven Central, and GitHub Packages needs a token even to read, so every job
+  # builds the release tag from source and installs it locally first. Keep the tag in step with the
+  # `scottyVersion` in build.sbt.
   SCOTTY_REPOSITORY: oluies/scotty
-  SCOTTY_REF: pctc
+  SCOTTY_REF: v0.7.0
 
 jobs:
   sbt:

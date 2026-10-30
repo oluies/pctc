@@ -21,9 +21,9 @@
       "allowedVersions": "/^3\\.9\\./"
     },
     {
-      "description": "Scotty is built from source by CI, not resolved from a registry.",
+      "description": "Scotty is built from its release tag by CI, not resolved from a registry.",
       "matchPackageNames": [
-        "xyz.entangled:**"
+        "io.github.oluies:**"
       ],
       "enabled": false
     },

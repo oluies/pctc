@@ -1,9 +1,9 @@
 val scala3Version = "3.9.0" // LTS
-val scottyVersion = "0.7.0-SNAPSHOT"
+val scottyVersion = "0.7.0"
 val duckdbVersion = "1.5.6.0"
 val munitVersion = "1.3.6"
 
-ThisBuild / organization := "xyz.entangled"
+ThisBuild / organization := "io.github.oluies"
 ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / scalaVersion := scala3Version
 
@@ -63,10 +63,11 @@ lazy val root = (project in file("."))
     name := "pctc",
     description := "Post-selected closed timelike curve simulation on Scotty, following arXiv:2509.08965.",
     licenses := Seq("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.txt")),
-    // Scotty's `pctc` branch, installed with `sbt publishLocal publishM2` in ../scotty.
+    // Scotty 0.7.0, tag v0.7.0 of oluies/scotty, installed with `sbt publishLocal publishM2` there.
+    // It is also on GitHub Packages, which needs a token even to read; see Scotty's README.
     resolvers += Resolver.mavenLocal,
     libraryDependencies ++= Seq(
-      "xyz.entangled" %% "scotty" % scottyVersion,
+      "io.github.oluies" %% "scotty" % scottyVersion,
       // The one permitted extra dependency, used only by the Main/Query layer.
       "org.duckdb" % "duckdb_jdbc" % duckdbVersion,
       "org.scalameta" %% "munit" % munitVersion % Test
