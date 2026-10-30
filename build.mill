@@ -5,8 +5,8 @@ import mill.scalalib.*
 
 /** Mill build for the P-CTC simulation, kept in sync with build.sbt.
   *
-  * Scotty's `pctc` branch has to be installed first with `./mill scotty.publishM2Local` (or
-  * `sbt publishM2`) in ../scotty.
+  * Scotty 0.7.0, tag v0.7.0 of oluies/scotty, has to be installed first with
+  * `./mill scotty.publishM2Local` (or `sbt publishM2`) in a checkout of that tag.
   *
   * Usage: `mill pctc.run`, `mill pctc.test`, `mill pctc.runMain pctc.Query`.
   */

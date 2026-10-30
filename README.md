@@ -6,8 +6,8 @@ JavaScript with Scala.js. No server does any of the arithmetic.
 A numerical model of the framework in
 [arXiv:2509.08965](https://arxiv.org/abs/2509.08965), *Retrocausal capacity of a quantum channel:
 Communicating through noisy closed timelike curves* (Kaiyuan Ji, Seth Lloyd, Mark M. Wilde), built on
-the density-matrix layer of [Scotty](https://github.com/oluies/scotty/tree/pctc) (the `pctc`
-branch of a fork of [entangled-xyz/scotty](https://github.com/entangled-xyz/scotty)).
+the density-matrix layer of [Scotty](https://github.com/oluies/scotty/releases/tag/v0.7.0) (release
+0.7.0 of a fork of [entangled-xyz/scotty](https://github.com/entangled-xyz/scotty)).
 
 The channel layer this depends on also has a hardware implementation in Chisel, verified against the
 same Scotty code: [**brokkr**](https://oluies.github.io/brokkr/) — see
