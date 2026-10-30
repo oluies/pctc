@@ -15,9 +15,12 @@ ThisBuild / scalaVersion := scala3Version
 lazy val jvmOnlySources = Set("Platform.scala", "Main.scala", "Results.scala", "Query.scala")
 
 // Scotty's state-vector simulator and the parallel runner of its gate-fusion pass use parallel
-// collections, which have no Scala.js artifact. The density-matrix layer the browser needs depends on
-// neither; the rest of the fusion pass, FusedKernel included, compiles for JavaScript as it is.
-lazy val jvmOnlyScottySources = Set("QuantumSimulator.scala", "VectorWrapper.scala", "FusedRunner.scala")
+// collections, which have no Scala.js artifact, and so does SemiclassicalShor, which drives both. The
+// density-matrix layer the browser needs depends on none of them; the rest of the fusion pass,
+// FusedKernel included, compiles for JavaScript as it is. A name that a checkout lacks matches
+// nothing, so the list also covers older Scotty releases.
+lazy val jvmOnlyScottySources =
+  Set("QuantumSimulator.scala", "VectorWrapper.scala", "FusedRunner.scala", "SemiclassicalShor.scala")
 
 // Scotty lives beside this repository for a local checkout and inside it in continuous
 // integration, where it is checked out to ./scotty. Look in both rather than assuming one.

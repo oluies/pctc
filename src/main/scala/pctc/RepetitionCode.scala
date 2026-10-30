@@ -9,12 +9,13 @@ import scotty.quantum.math.Complex
   */
 final case class RepetitionRow(noise: String, distance: Int, probability: Double, simulated: Double, closedForm: Double)
 
-/** A side demonstration, not part of arXiv:2509.08965: why cat qubits need no protection against
-  * bit flips.
+/** A side demonstration, not part of arXiv:2509.08965: why cat-qubit designs leave out protection
+  * against bit flips.
   *
-  * Alice & Bob's estimate of 22 593 cat qubits for RSA-2048 (IACR ePrint 2026/2665) rests on qubits
-  * whose bit flips are rare enough to ignore, so that a repetition code against phase flips alone is
-  * enough. The phase-flip code of distance `d` stores logical `|0>` as `|+>^d` and logical `|1>` as
+  * Alice & Bob's estimate of 22 593 cat qubits for RSA-2048 (IACR ePrint 2026/2665) assumes qubits
+  * whose bit flips are rare enough to ignore, a bit-flip time of about a hundred years, so that a
+  * repetition code against phase flips alone is enough. The paper's own Appendix C9 puts today's
+  * measured cat qubits more than eight orders of magnitude short of that. The phase-flip code of distance `d` stores logical `|0>` as `|+>^d` and logical `|1>` as
   * `|->^d`, and reads a logical value by majority vote over `X`-basis measurements.
   *
   * This is the code-capacity model: noise once on every qubit, then perfect measurement. The paper's
