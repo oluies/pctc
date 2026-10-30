@@ -6,8 +6,8 @@ JavaScript with Scala.js. No server does any of the arithmetic.
 A numerical model of the framework in
 [arXiv:2509.08965](https://arxiv.org/abs/2509.08965), *Retrocausal capacity of a quantum channel:
 Communicating through noisy closed timelike curves* (Kaiyuan Ji, Seth Lloyd, Mark M. Wilde), built on
-the density-matrix layer of [Scotty](https://github.com/oluies/scotty/releases/tag/v0.7.0) (release
-0.7.0 of a fork of [entangled-xyz/scotty](https://github.com/entangled-xyz/scotty)).
+the density-matrix layer of [Scotty](https://github.com/oluies/scotty/releases/tag/v0.7.1) (release
+0.7.1 of a fork of [entangled-xyz/scotty](https://github.com/entangled-xyz/scotty)).
 
 The channel layer this depends on also has a hardware implementation in Chisel, verified against the
 same Scotty code: [**brokkr**](https://oluies.github.io/brokkr/) — see
@@ -40,25 +40,25 @@ qubits, and does not use a semidefinite-programming solver (see
 
 ## Prerequisites
 
-Scotty 0.7.0, installed locally from its release tag:
+Scotty 0.7.1, installed locally from its release tag:
 
 ```bash
-git clone -b v0.7.0 https://github.com/oluies/scotty.git
+git clone -b v0.7.1 https://github.com/oluies/scotty.git
 cd scotty
 sbt publishLocal publishM2       # or: ./mill scotty.publishM2Local
 ```
 
-0.7.0 is also [published to GitHub Packages](https://github.com/oluies/scotty/releases/tag/v0.7.0);
+0.7.1 is also [published to GitHub Packages](https://github.com/oluies/scotty/releases/tag/v0.7.1);
 resolving it from there needs a token with `read:packages`, as Scotty's README describes.
 
 This project targets **Scala 3.9 LTS**, is built and tested on the latest JDK (27 at the time of
 writing), and emits bytecode for JDK 21.
-It depends on `io.github.oluies::scotty:0.7.0`; the only other non-test dependency is
+It depends on `io.github.oluies::scotty:0.7.1`; the only other non-test dependency is
 `org.duckdb:duckdb_jdbc`, used only by the `Main` / `Results` / `Query` layer, with
 `org.scalameta::munit` for tests.
 
 CI builds Scotty from source before every job, since it is not on Maven Central and GitHub Packages
-needs a token to read: `.github/workflows/ci.yml` checks out `oluies/scotty` at tag `v0.7.0`, runs `publishLocal publishM2`
+needs a token to read: `.github/workflows/ci.yml` checks out `oluies/scotty` at tag `v0.7.1`, runs `publishLocal publishM2`
 there, and only then compiles and tests this project — under sbt on JDK 21, 25 and 27, and under
 Mill on 27. A third job regenerates the cvxpy fixture and reports any drift without failing the
 build.

@@ -16,7 +16,7 @@ permissions:
 
 env:
   SCOTTY_REPOSITORY: oluies/scotty
-  SCOTTY_REF: v0.7.0
+  SCOTTY_REF: v0.7.1
 
 jobs:
   build:
