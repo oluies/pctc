@@ -3,8 +3,10 @@ import Mathlib
 /-!
 # The repetition code, decoded by majority vote
 
-A side section, not part of arXiv:2509.08965. Cat qubits barely ever bit-flip, so Alice & Bob protect
-them against phase flips alone, with a repetition code (IACR ePrint 2026/2665). This file proves the
+A side section, not part of arXiv:2509.08965. Alice & Bob's design assumes cat qubits that barely
+ever bit-flip, and protects them against phase flips alone, with a repetition code (IACR ePrint
+2026/2665); today's cat qubits are, by the paper's own account, eight orders of magnitude short of
+that assumption. This file proves the
 two facts the page's simulation rests on:
 
 * majority vote on `2t + 1` copies corrects every pattern of at most `t` flips, and no more;

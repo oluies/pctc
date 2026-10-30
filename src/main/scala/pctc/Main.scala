@@ -167,12 +167,13 @@ object Main:
       )
 
     s"""
-       |Side note, not part of arXiv:2509.08965: why cat qubits need no bit-flip protection
+       |Side note, not part of arXiv:2509.08965: why cat-qubit designs leave out bit-flip protection
        |    A phase-flip repetition code on n qubits, decoded by majority vote, after noise once on
        |    every qubit. Phase flips: the failure rate is the binomial tail, more than n/2 flips, and
        |    falls with n. Bit flips: one is already a logical error the code cannot see, so the rate
        |    is (1 - (1 - 2p)^n)/2, about n p, and rises with n. 5e-4 is the phase-flip rate assumed
-       |    in IACR ePrint 2026/2665; that paper's figures come from circuit-level noise, not this.
+       |    in IACR ePrint 2026/2665; that paper's figures come from circuit-level noise, not this,
+       |    and its own fit (Eq. C46) at its n = 15 gives 7.9e-16 where a single round gives 2.5e-23.
        |
        |${TextTable.render(
         Seq("noise", "n", "p", "simulated", "closed form"),
