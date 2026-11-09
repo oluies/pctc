@@ -50,6 +50,28 @@
         "com-lihaoyi/mill"
       ],
       "allowedVersions": "/^1\\./"
+    },
+    {
+      "description": [
+        "The built-in sbt manager cannot resolve this one. %%% in build.sbt is the",
+        "Scala.js cross-version operator, so the artifact carries both suffixes --",
+        "_sjs1_3 -- while the sbt manager only appends _3:",
+        "",
+        "  org/scala-js/scalajs-dom_3      -> 404",
+        "  org/scala-js/scalajs-dom_sjs1_3 -> 200",
+        "",
+        "That produced the 'Failed to look up sbt-package package",
+        "org.scala-js:scalajs-dom_3' warning on the dashboard. Disabled here so the",
+        "sbt manager stops retrying an impossible name; the customManager below",
+        "tracks the real artifact.",
+        "",
+        "Note this is build.sbt, not build.mill -- the existing Mill regex manager",
+        "maps mvn\"org::artifact\" to _3, which is right for the JVM module."
+      ],
+      "matchPackageNames": [
+        "org.scala-js:scalajs-dom_3"
+      ],
+      "enabled": false
     }
   ],
   "customManagers": [
@@ -99,6 +121,18 @@
         "\"(?<depName>numpy|cvxpy)>=(?<currentValue>[\\d.]+)\""
       ],
       "datasourceTemplate": "pypi"
+    },
+    {
+      "customType": "regex",
+      "description": "scalajs-dom in build.sbt (%%% -> _sjs1_3; scala3Version is 3.9.0)",
+      "managerFilePatterns": [
+        "/^build\\.sbt$/"
+      ],
+      "matchStrings": [
+        "\"org\\.scala-js\"\\s*%%%\\s*\"scalajs-dom\"\\s*%\\s*\"(?<currentValue>[^\"]+)\""
+      ],
+      "depNameTemplate": "org.scala-js:scalajs-dom_sjs1_3",
+      "datasourceTemplate": "maven"
     }
   ]
 }
