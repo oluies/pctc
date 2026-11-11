@@ -101,7 +101,7 @@ jobs:
     continue-on-error: true
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.3.0
+      - uses: astral-sh/setup-uv@v10.3.3
       - name: Regenerate the references and show any drift
         run: |
           uv run reference/sdp_reference.py
