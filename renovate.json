@@ -72,6 +72,26 @@
         "org.scala-js:scalajs-dom_3"
       ],
       "enabled": false
+    },
+    {
+      "description": [
+        "Group any dependency that is declared in BOTH build definitions, so sbt",
+        "and Mill cannot drift apart on it.",
+        "",
+        "The existing 'build tooling' group covers the build TOOL versions",
+        "(project/build.properties, .mill-version, mill) via matchFileNames. It",
+        "does not cover a library that appears in both build.sbt and build.mill --",
+        "and org.duckdb:duckdb_jdbc does. Renovate therefore raised the 2.x bump as",
+        "two separate PRs, #20 (build.mill) and #21 (build.sbt), which could have",
+        "landed one at a time and left the two builds resolving different driver",
+        "versions.",
+        "",
+        "Add further shared coordinates here if more appear in both files."
+      ],
+      "matchPackageNames": [
+        "org.duckdb:duckdb_jdbc"
+      ],
+      "groupName": "duckdb jdbc (both build definitions)"
     }
   ],
   "customManagers": [
