@@ -1,6 +1,6 @@
 val scala3Version = "3.9.0" // LTS
 val scottyVersion = "0.7.1"
-val duckdbVersion = "2.0.0.1"
+val duckdbVersion = "2.0.1.0"
 val munitVersion = "1.3.6"
 
 ThisBuild / organization := "io.github.oluies"
