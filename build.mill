@@ -19,7 +19,7 @@ object pctc extends ScalaModule {
 
   def mvnDeps = Seq(
     mvn"io.github.oluies::scotty:0.7.1",
-    mvn"org.duckdb:duckdb_jdbc:2.0.0.1"
+    mvn"org.duckdb:duckdb_jdbc:2.0.1.0"
   )
 
   // Picks up the locally installed Scotty from ~/.m2/repository.
